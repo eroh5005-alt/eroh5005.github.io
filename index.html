@@ -1,0 +1,4837 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>抽象排序可视化合集</title>
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:system-ui,"Microsoft Yahei",sans-serif;
+}
+
+body{
+  background:#0f111a;
+  color:#eef;
+  padding:20px;
+  max-width:100%;
+  overflow-y:auto;
+}
+
+h1{
+  text-align:center;
+  color:#ffdd44;
+  margin-bottom:6px;
+  font-size:26px;
+}
+
+.note{
+  text-align:center;
+  color:#aaa;
+  font-size:14px;
+  margin-bottom:20px;
+}
+
+.box{
+  background:#1a1d2c;
+  border-radius:12px;
+  padding:20px;
+  border:1px solid #333750;
+}
+
+.ctrl{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  align-items:center;
+  margin-bottom:16px;
+}
+
+select,button,input{
+  padding:7px 12px;
+  border-radius:6px;
+  border:none;
+  font-size:14px;
+}
+
+select{
+  background:#272b40;
+  color:#fff;
+}
+
+button{
+  background:#2574e8;
+  color:#fff;
+  cursor:pointer;
+}
+
+button:disabled{
+  background:#44465c;
+  cursor:not-allowed;
+}
+
+.view-scroll{
+  width:100%;
+  overflow-x:auto;
+  overflow-y:hidden;
+  background:#131622;
+  border-radius:8px;
+  padding:12px;
+  -webkit-overflow-scrolling:touch;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:310px;
+}
+
+.view-center{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-shrink:0;
+}
+
+.view-inner{
+  display:inline-block;
+  transform-origin:center center;
+  width:max-content;
+  will-change:transform;
+}
+
+.view{
+  display:flex;
+  align-items:flex-end;
+  gap:1px;
+  height:280px;
+  min-width:1px;
+  user-select:none;
+}
+
+.bar{
+  width:6px;
+  min-width:6px;
+  background:#36b0ff;
+  border-radius:2px 2px 0 0;
+  flex-shrink:0;
+  cursor:pointer;
+  will-change:transform;
+
+  transition:
+    height .12s linear,
+    background .3s ease,
+    box-shadow .3s ease,
+    transform .85s cubic-bezier(.22,.75,.25,1);
+}
+
+.bar.selected{
+  background:#ffdd00 !important;
+  box-shadow:0 0 6px #ffdd00;
+}
+
+.bar-fixed{
+  background:#42dd66 !important;
+}
+
+.bar-trump{
+  background:#ff4444 !important;
+  box-shadow:
+    0 0 5px #ff2222,
+    0 0 10px rgba(255,68,68,.8);
+  z-index:20;
+}
+
+.bar-trump-fixed{
+  background:#ff2222 !important;
+  box-shadow:
+    0 0 3px #ff1111,
+    0 0 7px rgba(255,34,34,.55);
+}
+
+.bar-win{
+  background:linear-gradient(
+    180deg,
+    #fff2a8,
+    #ffd700,
+    #b8860b
+  ) !important;
+  box-shadow:0 0 6px #ffd700;
+}
+
+.bar-pivot{
+  background:#ffaa00 !important;
+  box-shadow:0 0 8px #ffaa00;
+}
+
+.bar-hole{
+  background:#ff3333 !important;
+  box-shadow:
+    0 0 10px #ff3333,
+    0 0 20px rgba(255,51,51,.8) !important;
+  z-index:50;
+  transform:scaleY(0.85);
+}
+
+.bar-pivot1{
+  background:#ff8800 !important;
+  box-shadow:
+    0 0 8px #ff8800,
+    0 0 16px rgba(255,136,0,.6);
+}
+
+.bar-pivot2{
+  background:#ff33aa !important;
+  box-shadow:
+    0 0 8px #ff33aa,
+    0 0 16px rgba(255,51,170,.6);
+}
+
+.bar-less{
+  background:#00ddff !important;
+  box-shadow:
+    0 0 10px #00ddff,
+    0 0 20px rgba(0,221,255,.8) !important;
+  z-index:50;
+  transform:scaleY(0.9);
+}
+
+.bar-great{
+  background:#dd00ff !important;
+  box-shadow:
+    0 0 10px #dd00ff,
+    0 0 20px rgba(221,0,255,.8) !important;
+  z-index:50;
+  transform:scaleY(0.9);
+}
+
+.bar-k{
+  background:#00ff88 !important;
+  box-shadow:
+    0 0 10px #00ff88,
+    0 0 20px rgba(0,255,136,.8) !important;
+  z-index:55;
+  transform:scaleY(1.05);
+}
+
+.bar-gnome{
+  background:#00e5ff !important;
+  box-shadow:
+    0 0 10px #00e5ff,
+    0 0 22px rgba(0,229,255,.9) !important;
+  z-index:60;
+  transform:scaleY(1.12);
+}
+
+.bar-gnome-swap{
+  background:#ff2e88 !important;
+  box-shadow:
+    0 0 10px #ff2e88,
+    0 0 22px rgba(255,46,136,.9) !important;
+  z-index:55;
+  transform:scaleY(1.08);
+}
+
+.bar-patience-current{
+  background:#00e5ff !important;
+  box-shadow:
+    0 0 10px #00e5ff,
+    0 0 22px rgba(0,229,255,.9) !important;
+  z-index:60;
+  transform:scaleY(1.12);
+}
+
+.bar-patience-pile{
+  background:#ffd700 !important;
+  box-shadow:
+    0 0 8px #ffd700,
+    0 0 16px rgba(255,215,0,.7) !important;
+  z-index:50;
+}
+
+.bar-waking{
+  background:#36b0ff !important;
+  box-shadow:
+    0 0 5px #36b0ff,
+    0 0 12px rgba(54,176,255,.8);
+  z-index:50;
+}
+
+.bar-sleeping{
+  background:#666a78 !important;
+  box-shadow:none !important;
+}
+
+.bar-sleep-waking{
+  background:#36b0ff !important;
+  box-shadow:
+    0 0 8px #36b0ff,
+    0 0 18px rgba(54,176,255,.8);
+  z-index:100;
+}
+
+.bar-thanos{
+  background:#9955ff !important;
+  box-shadow:0 0 7px #7722dd;
+}
+
+.slow-moving{
+  z-index:30 !important;
+  box-shadow:
+    0 0 8px rgba(54,176,255,.9),
+    0 0 18px rgba(54,176,255,.5);
+}
+
+.slow-swap{
+  transition:
+    transform .42s cubic-bezier(.2,.8,.2,1),
+    height .18s linear,
+    background .18s linear !important;
+}
+
+.bubble-moving{
+  z-index:50 !important;
+  box-shadow:
+    0 0 8px rgba(54,176,255,.95),
+    0 0 18px rgba(54,176,255,.55);
+}
+
+.bubble-compare{
+  background:#ffaa00 !important;
+  box-shadow:0 0 8px #ffaa00;
+  z-index:40;
+}
+
+.bubble-sorted{
+  background:#42dd66 !important;
+}
+
+.tim-run{
+  background:#ff66cc !important;
+  box-shadow:
+    0 0 6px #ff66cc,
+    0 0 14px rgba(255,102,204,.6);
+  z-index:35;
+}
+
+.tim-compare{
+  background:#ffaa00 !important;
+  box-shadow:0 0 8px #ffaa00;
+  z-index:45;
+}
+
+.tim-merge{
+  background:#bb77ff !important;
+  box-shadow:
+    0 0 7px #9955ff,
+    0 0 15px rgba(153,85,255,.55);
+  z-index:40;
+}
+
+.tim-fixed{
+  background:#42dd66 !important;
+}
+
+.bucket-bar{
+  box-shadow:
+    0 0 8px currentColor,
+    0 0 18px currentColor !important;
+  z-index:30;
+  transform:scaleY(1.08);
+}
+
+.bucket-collect{
+  box-shadow:
+    0 0 8px #ffffff,
+    0 0 18px rgba(255,255,255,.7) !important;
+  z-index:35;
+  transform:scaleY(1.1);
+}
+
+/* 其他专用颜色 */
+.bar-cocktail-left{background:#ff6600 !important;box-shadow:0 0 8px #ff6600;z-index:40;}
+.bar-cocktail-right{background:#ff00cc !important;box-shadow:0 0 8px #ff00cc;z-index:40;}
+.bar-cocktail-swap{background:#ffaa00 !important;box-shadow:0 0 8px #ffaa00,0 0 16px rgba(255,170,0,.7) !important;z-index:50;transform:scaleY(1.1);}
+
+.bar-shell-gap{background:#9966ff !important;box-shadow:0 0 8px #9966ff,0 0 16px rgba(153,102,255,.7) !important;z-index:50;}
+.bar-shell-compare{background:#ffaa00 !important;box-shadow:0 0 8px #ffaa00;z-index:45;}
+
+.bar-heap-node{background:#00ccff !important;box-shadow:0 0 8px #00ccff,0 0 16px rgba(0,204,255,.7) !important;z-index:50;}
+.bar-heap-swap{background:#ff3366 !important;box-shadow:0 0 8px #ff3366,0 0 16px rgba(255,51,102,.7) !important;z-index:55;}
+.bar-heap-sorted{background:#42dd66 !important;}
+
+/* 选择排序 */
+.bar-select-min{
+  background:#ffd700 !important;
+  box-shadow:
+    0 0 10px #ffd700,
+    0 0 20px rgba(255,215,0,.8) !important;
+  z-index:60;
+  transform:scaleY(1.15);
+}
+.bar-select-scan{
+  background:#ff9933 !important;
+  box-shadow:
+    0 0 8px #ff9933,
+    0 0 16px rgba(255,153,51,.7) !important;
+  z-index:55;
+}
+.bar-select-sorted{
+  background:#42dd66 !important;
+}
+
+/* MSD基数排序 */
+.bar-msd-current{
+  background:#ff33cc !important;
+  box-shadow:
+    0 0 10px #ff33cc,
+    0 0 20px rgba(255,51,204,.8) !important;
+  z-index:55;
+}
+.bar-msd-bucket{
+  box-shadow:0 0 6px currentColor;
+  z-index:50;
+}
+
+/* C++标准库排序（深紫色） */
+.bar-cpp-sort{
+  background:#bb55ff !important;
+  box-shadow:
+    0 0 10px #bb55ff,
+    0 0 20px rgba(187,85,255,.8) !important;
+  z-index:55;
+}
+.bar-cpp-sort-fixed{
+  background:#42dd66 !important;
+}
+
+/* C++稳定排序（青蓝色） */
+.bar-cpp-stable{
+  background:#33ddff !important;
+  box-shadow:
+    0 0 10px #33ddff,
+    0 0 20px rgba(51,221,255,.8) !important;
+  z-index:55;
+}
+.bar-cpp-stable-fixed{
+  background:#42dd66 !important;
+}
+
+/* Bitonic排序（红蓝双色） */
+.bar-bitonic-up{
+  background:#ff3366 !important;
+  box-shadow:
+    0 0 10px #ff3366,
+    0 0 20px rgba(255,51,102,.8) !important;
+  z-index:55;
+}
+.bar-bitonic-down{
+  background:#3366ff !important;
+  box-shadow:
+    0 0 10px #3366ff,
+    0 0 20px rgba(51,102,255,.8) !important;
+  z-index:55;
+}
+
+/* 杀戮排序：柱子闪绿（复活） */
+.bar-kill-revive{
+  background:#22ff66 !important;
+  box-shadow:
+    0 0 12px #22ff66,
+    0 0 24px rgba(34,255,102,.9) !important;
+  z-index:80;
+  animation: killRevive 0.4s ease-out;
+  transform:scaleY(1.15);
+}
+
+@keyframes killRevive{
+  0%   { filter: brightness(1.6); }
+  100% { filter: brightness(1); }
+}
+
+/* 杀戮排序：柱子闪红 */
+.bar-kill-flash{
+  background:#ff2222 !important;
+  box-shadow:
+    0 0 12px #ff2222,
+    0 0 24px rgba(255,34,34,.9) !important;
+  z-index:80;
+  animation: killFlash 0.26s ease-out;
+  transform:scaleY(1.15);
+}
+
+@keyframes killFlash{
+  0%   { filter: brightness(1.5); }
+  100% { filter: brightness(1); }
+}
+
+/* 插入排序：当前要插入的柱子（金黄色） */
+.bar-insert-key{
+  background:#ffd700 !important;
+  box-shadow:
+    0 0 10px #ffd700,
+    0 0 20px rgba(255,215,0,.8) !important;
+  z-index:60;
+  transform:scaleY(1.15);
+}
+
+/* 插入排序：正在比较的柱子（橙色） */
+.bar-insert-compare{
+  background:#ff9933 !important;
+  box-shadow:
+    0 0 8px #ff9933,
+    0 0 16px rgba(255,153,51,.7) !important;
+  z-index:55;
+  transform:scaleY(1.08);
+}
+
+.bar-count-input{background:#ff9933 !important;box-shadow:0 0 8px #ff9933,0 0 16px rgba(255,153,51,.7) !important;z-index:50;}
+.bar-count-output{background:#33ff99 !important;box-shadow:0 0 8px #33ff99,0 0 16px rgba(51,255,153,.7) !important;z-index:55;}
+
+.bar-radix-current{background:#ff33cc !important;box-shadow:0 0 8px #ff33cc,0 0 16px rgba(255,51,204,.7) !important;z-index:50;}
+
+.bar-pancake-flip{background:#ff9900 !important;box-shadow:0 0 8px #ff9900,0 0 18px rgba(255,153,0,.8) !important;z-index:55;transform:scaleY(1.1);}
+.bar-pancake-max{background:#ff0066 !important;box-shadow:0 0 8px #ff0066,0 0 16px rgba(255,0,102,.7) !important;z-index:50;}
+
+.bar-random-pivot{background:#cc00ff !important;box-shadow:0 0 8px #cc00ff,0 0 16px rgba(204,0,255,.7) !important;z-index:55;}
+
+.bar-intro-pivot{background:#ffaa00 !important;box-shadow:0 0 8px #ffaa00;z-index:45;}
+.bar-intro-heap{background:#00cccc !important;box-shadow:0 0 8px #00cccc,0 0 16px rgba(0,204,204,.7) !important;z-index:50;}
+
+.bar-pigeon-hole{background:#ffcc00 !important;box-shadow:0 0 8px #ffcc00,0 0 16px rgba(255,204,0,.7) !important;z-index:50;}
+
+.bar-alien{background:#00ff88 !important;box-shadow:0 0 12px #00ff88,0 0 24px rgba(0,255,136,.8) !important;z-index:60;transform:scaleY(1.15);}
+
+/* ===== 离心排序 ===== */
+.centrifuge-spin {
+  animation: centrifugeSpin 0.3s linear infinite;
+  transform-origin: center center;
+  will-change: transform;
+}
+@keyframes centrifugeSpin {
+  0%   { transform: rotate(0deg) scale(var(--spin-scale, 0.1)); }
+  100% { transform: rotate(360deg) scale(var(--spin-scale, 0.1)); }
+}
+.centrifuge-shake {
+  animation: centrifugeShake 0.1s linear infinite;
+}
+@keyframes centrifugeShake {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(-2px, 1px); }
+  50%  { transform: translate(1px, -2px); }
+  75%  { transform: translate(2px, 2px); }
+  100% { transform: translate(0, 0); }
+}
+.bar-centrifuge-heavy {
+  background:#ff3366 !important;
+  box-shadow:
+    0 0 14px #ff3366,
+    0 0 28px rgba(255,51,102,.95) !important;
+  z-index:60;
+  transform:scaleY(1.18);
+  animation: centrifugeHeavy 0.25s ease-in-out infinite alternate;
+}
+@keyframes centrifugeHeavy {
+  from { filter: brightness(1); }
+  to   { filter: brightness(1.7); }
+}
+.bar-centrifuge-out {
+  background:#ffaa00 !important;
+  box-shadow:
+    0 0 10px #ffaa00,
+    0 0 20px rgba(255,170,0,.85) !important;
+  z-index:55;
+}
+.bar-centrifuge-fly {
+  background:#ffffff !important;
+  box-shadow:
+    0 0 16px #ffffff,
+    0 0 32px rgba(255,255,255,.9) !important;
+  z-index:70;
+  filter: blur(0.4px);
+}
+
+/* GPT排序 */
+.bar-gpt-thinking{
+  background:#9955ff !important;
+  box-shadow:
+    0 0 12px #9955ff,
+    0 0 24px rgba(153,85,255,.85) !important;
+  z-index:60;
+  animation: gptPulse 0.6s ease-in-out infinite alternate;
+}
+@keyframes gptPulse{
+  from{ filter: brightness(1); }
+  to  { filter: brightness(1.6); }
+}
+.bar-gpt-output{
+  background:#00e5ff !important;
+  box-shadow:
+    0 0 10px #00e5ff,
+    0 0 20px rgba(0,229,255,.8) !important;
+  z-index:55;
+}
+
+/* 薛定谔排序 */
+.bar-schrodinger{
+  background:#8888ff !important;
+  box-shadow:
+    0 0 10px #8888ff,
+    0 0 22px rgba(136,136,255,.8) !important;
+  z-index:55;
+  opacity:0.55;
+  filter: blur(0.6px);
+  animation: schrodingerBlink 0.5s ease-in-out infinite alternate;
+}
+@keyframes schrodingerBlink{
+  from{ opacity:0.3; filter:blur(1.2px); }
+  to  { opacity:0.8; filter:blur(0.2px); }
+}
+.bar-schrodinger-collapse{
+  background:#ffd700 !important;
+  box-shadow:
+    0 0 16px #ffd700,
+    0 0 32px rgba(255,215,0,.95) !important;
+  z-index:70;
+  transform:scaleY(1.2);
+}
+
+/* 时间倒流排序 */
+.bar-timereverse{
+  background:#00ffcc !important;
+  box-shadow:
+    0 0 10px #00ffcc,
+    0 0 20px rgba(0,255,204,.85) !important;
+  z-index:55;
+}
+
+/* 珠排序 */
+.bead-column{
+  width:6px;
+  min-width:6px;
+  height:280px !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  border-radius:0 !important;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  position:relative;
+  cursor:pointer;
+  flex-shrink:0;
+  overflow:hidden;
+}
+.bead-stack{
+  width:100%;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  align-items:center;
+  gap:1px;
+  overflow:hidden;
+}
+.bead-piece{
+  width:100%;
+  height:3px;
+  min-height:3px;
+  flex-shrink:0;
+  background:#36b0ff;
+  border-radius:1px;
+  box-shadow:0 0 2px rgba(54,176,255,.65);
+}
+.bead-piece.active{
+  background:#66c8ff;
+  box-shadow:
+    0 0 4px #36b0ff,
+    0 0 8px rgba(54,176,255,.8);
+}
+.bead-column.bead-win .bead-piece{
+  background:linear-gradient(
+    180deg,
+    #fff2a8,
+    #ffd700,
+    #b8860b
+  );
+  box-shadow:0 0 3px #ffd700;
+}
+.bead-column.bead-selected .bead-piece{
+  background:#ffdd00;
+  box-shadow:0 0 4px #ffdd00;
+}
+
+.zoom-area{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:12px;
+  color:#ddd;
+  font-size:14px;
+}
+.zoom-area input[type=range]{
+  flex:1;
+}
+.info,
+.desc{
+  margin-top:8px;
+  color:#ddd;
+  font-size:15px;
+}
+.manual-ctrl{
+  margin-top:10px;
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+</style>
+</head>
+
+<body>
+
+<h1>😎 抽象排序可视化合集 🥳</h1>
+
+<div class="note">
+~~~~~~ 版本号 : 5.1 ~~~~~~
+</div>
+
+<div class="box">
+
+<div class="ctrl">
+
+<select id="typeSel">
+  <option value="monkeyOriginal">猴子排序</option>
+  <option value="monkeyOpt">猴子排序 优化版</option>
+  <option value="stalin">斯大林排序</option>
+  <option value="brezhnev">勃列日涅夫排序</option>
+  <option value="miracle">奇迹排序</option>
+  <option value="trump">特朗普排序</option>
+  <option value="gorbachev">戈尔巴乔夫排序</option>
+  <option value="polpot">波氏排序</option>
+  <option value="taiping">太平天国排序</option>
+  <option value="sleep">睡眠排序</option>
+  <option value="quick">快速排序</option>
+  <option value="dualPivot">双端快速排序</option>
+  <option value="gnome">地精排序</option>
+  <option value="patience">耐心排序</option>
+  <option value="thanos">灭霸排序</option>
+  <option value="pizza">披萨排序</option>
+  <option value="slow">慢速排序</option>
+  <option value="bubble">冒泡排序</option>
+  <option value="selection">选择排序</option>
+  <option value="msdRadix">MSD基数排序</option>
+  <option value="cppSort">C++标准库排序</option>
+  <option value="cppStableSort">C++稳定排序</option>
+  <option value="bitonic">Bitonic排序</option>
+  <option value="insertion">插入排序</option>
+  <option value="tim">蒂姆排序</option>
+  <option value="bead">珠排序</option>
+  <option value="hourglass">沙漏排序</option>
+  <option value="bucket">桶排序</option>
+  <option value="manual">手动排序</option>
+  <option value="kill">杀戮排序</option>
+  <option value="emptyCity">许家印排序</option>
+  <option value="cocktail">鸡尾酒排序</option>
+  <option value="shell">希尔排序</option>
+  <option value="heap">堆排序</option>
+  <option value="counting">计数排序</option>
+  <option value="radix">基数排序</option>
+  <option value="pancake">煎饼排序</option>
+  <option value="randomQuick">随机快速排序</option>
+  <option value="intro">内省排序</option>
+  <option value="pigeonhole">鸽巢排序</option>
+  <option value="alien">外星排序</option>
+  <option value="centrifuge">离心排序</option>
+  <option value="gpt">GPT排序</option>
+  <option value="schrodinger">薛定谔排序</option>
+  <option value="timereverse">时间倒流排序</option>
+</select>
+
+<label>
+数量:
+<input id="sizeIn" type="number" min="4" max="1000"
+value="120" style="width:70px">
+</label>
+
+<label>
+速度(ms):
+<input id="spIn" type="number" min="0" max="800"
+value="260" style="width:60px">
+</label>
+
+<label id="grainCountLabel" style="display:none;">
+沙粒数量:
+<input id="grainCountIn" type="number" min="10" max="20000" value="200" style="width:80px">
+</label>
+
+<label>
+倍速:
+<select id="speedMul">
+<option value="0.5">×0.5</option>
+<option value="0.75">×0.75</option>
+<option value="1" selected>×1</option>
+<option value="2">×2</option>
+<option value="3">×3</option>
+<option value="4">×4</option>
+<option value="5">×5</option>
+<option value="6">×6</option>
+<option value="7">×7</option>
+<option value="8">×8</option>
+<option value="9">×9</option>
+<option value="10">×10</option>
+<option value="25">×25</option>
+<option value="50">×50</option>
+<option value="75">×75</option>
+<option value="100">×100</option>
+<option value="200">×200</option>
+<option value="300">×300</option>
+<option value="400">×400</option>
+<option value="500">×500</option>
+</select>
+</label>
+
+<button id="killBtn" style="display:none;">杀戮模式：关</button>
+<button id="killUndoBtn" style="display:none;">复活上一个柱子</button>
+<button id="genBtn">新建打乱数组</button>
+<button id="runBtn">开始</button>
+<button id="stopBtn">停止</button>
+
+</div>
+
+<div class="manual-ctrl" id="manualCtrl" style="display:none;">
+
+<button id="swapBtn" disabled>
+交换选中两根柱子
+</button>
+
+<button id="cancelSelBtn">
+取消选择
+</button>
+
+<span id="selInfo">
+未选择柱子
+</span>
+
+</div>
+
+<div class="view-scroll">
+
+  <div class="view-center">
+
+    <div class="view-inner" id="viewInner">
+
+      <div class="view" id="viewEl"></div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<div class="zoom-area">
+
+<span>视图缩放</span>
+
+<input
+id="zoomRange"
+type="range"
+min="0.01"
+max="3"
+step="0.01"
+value="1">
+
+<span id="zoomText">100%</span>
+
+</div>
+
+<div class="info">
+尝试次数：
+<span id="cntEl">0</span>
+</div>
+
+<div class="desc" id="descEl">
+慢速排序：故意设计成最慢的递归排序！
+</div>
+
+</div>
+
+<script>
+
+const viewInner=document.getElementById("viewInner");
+const viewEl=document.getElementById("viewEl");
+
+const typeSel=document.getElementById("typeSel");
+const sizeIn=document.getElementById("sizeIn");
+const spIn=document.getElementById("spIn");
+const speedMul=document.getElementById("speedMul");
+
+const grainCountIn=document.getElementById("grainCountIn");
+
+const genBtn=document.getElementById("genBtn");
+const killBtn=document.getElementById("killBtn");
+const killUndoBtn=document.getElementById("killUndoBtn");
+const runBtn=document.getElementById("runBtn");
+const stopBtn=document.getElementById("stopBtn");
+
+const cntEl=document.getElementById("cntEl");
+const descEl=document.getElementById("descEl");
+
+const zoomRange=document.getElementById("zoomRange");
+const zoomText=document.getElementById("zoomText");
+
+const manualCtrl=document.getElementById("manualCtrl");
+const swapBtn=document.getElementById("swapBtn");
+const cancelSelBtn=document.getElementById("cancelSelBtn");
+const selInfo=document.getElementById("selInfo");
+
+let arr=[];
+let tryCnt=0;
+
+let running=false;
+let runToken=0;
+let timer=null;
+
+let lastGroupIds=null;
+let lockPos=-1;
+
+let isWin=false;
+let isGorbachevMode=false;
+
+let trumpProcessedCount=0;
+
+let selectedIndexes=[];
+
+let killModeOn = false;
+let killHistory = [];   // 记录杀掉的柱子 {index, value}
+
+let hourglassClearRequest = false;
+
+/* 睡眠排序状态 */
+let sleepIds=[];
+let sleepAwakeIds=new Set();
+let sleepMovingId=null;
+let sleepMovingIndex=-1;
+let sleepTargetIndex=-1;
+let sleepValueById=new Map();
+
+/* 珠排序 */
+let beadGrid=null;
+let beadCurrentRow=-1;
+let beadMaxVal=0;
+
+
+/* =====================================================
+   颜色映射
+===================================================== */
+
+function bucketColor(bucketIndex, totalBuckets) {
+  const hue = (bucketIndex * 137.508) % 360;
+  const sat = 75 + (bucketIndex % 3) * 8;
+  const light = 55 + (bucketIndex % 2) * 8;
+  return `hsl(${hue}, ${sat}%, ${light}%)`;
+}
+
+
+/* =========================
+   说明
+========================= */
+
+const texts={
+
+monkeyOriginal:
+"猴子排序：每次把整个数组全部打乱，直到碰巧变成升序。",
+
+monkeyOpt:
+"猴子排序优化版：从左到右逐个检查，已经就位的柱子锁定保留，只对未排好的部分继续随机打乱。",
+
+stalin:
+"斯大林排序：遍历数组，只保留不小于前一个的元素。",
+
+brezhnev:
+"勃列日涅夫排序：直接填好数据，似乎排序了……吗？",
+
+miracle:
+"奇迹排序：等待奇迹发生。",
+
+trump:
+"特朗普排序：从左到右，每次只改变当前这一根柱子。",
+
+gorbachev:
+"戈尔巴乔夫排序：从左到右进行分组。",
+
+polpot:
+"波氏排序：从左到右，一个一个删除。",
+
+taiping:
+"太平天国排序：把柱子逐个改成平均值。",
+
+sleep:
+"睡眠排序：越短的柱子越早醒来。",
+
+quick:
+"快速排序：橙色为基准，红色为当前坑位。",
+
+dualPivot:
+"双端快速排序：橙色为左基准，粉色为右基准。",
+
+gnome:
+"地精排序：像插入排序一样遍历数组，但每次只向后交换一步。",
+
+patience:
+"耐心排序：模拟纸牌接龙，每个牌堆颜色不同。",
+
+thanos:
+"灭霸排序：随机消除一半柱子。",
+
+pizza:
+"披萨排序：不断旋转整个数组。",
+
+slow:
+"慢速排序：故意设计成最慢的递归排序。",
+
+bubble:
+"冒泡排序：比较相邻柱子，较大的柱子不断向右冒泡。",
+
+selection:
+"选择排序：每次从未排序部分里找到最小的柱子，放到已排序末尾。",
+
+msdRadix:
+"MSD基数排序：从最高位开始分桶，每个桶递归地对下一位排序，直到所有位处理完。",
+
+cppSort:
+"C++标准库排序：混合排序，结合了快排、插入排序和堆排，小数组用插入排序，递归过深时转堆排序。",
+
+cppStableSort:
+"C++稳定排序：保证相等元素的相对顺序不变。",
+
+bitonic:
+"Bitonic排序：先构造双调序列，再逐步分解为更小的双调序列并排序，并行排序的经典算法。",
+
+insertion:
+"插入排序：从左到右把每根柱子插入到左边已经排好序的合适位置，像整理扑克牌一样。",
+
+tim:
+"蒂姆排序：先把数组分成多个小段，每段用插入排序整理，再逐步合并。",
+
+bead:
+"珠排序：每根柱子由许多颗蓝色珠子组成。",
+
+hourglass:
+"沙漏排序：柱子化作流沙从顶部漏下，按大小分层落到下方，形成有序沙堆。",
+
+bucket:
+"桶排序：把柱子按数值范围分到若干个桶中，每个桶一种颜色。",
+
+manual:
+"手动排序：点击两根柱子，然后交换。排成升序时自动胜利！",
+
+kill:
+"杀戮排序：开启杀戮模式后，点击柱子将其清除。剩下的柱子变为有序时即胜利。",
+
+emptyCity:
+"许家印排序：正在排序中……",
+
+cocktail:
+"鸡尾酒排序：双向冒泡。",
+
+shell:
+"希尔排序：按增量分组进行插入排序。",
+
+heap:
+"堆排序：先建大顶堆，再反复取出堆顶。",
+
+counting:
+"计数排序：统计每个值出现的次数，然后按顺序输出。",
+
+radix:
+"基数排序：按个位、十位、百位……依次分配。",
+
+pancake:
+"煎饼排序：通过两次翻转把最大值放到正确位置。",
+
+randomQuick:
+"随机快速排序：基准随机选取。",
+
+intro:
+"内省排序：快排 + 堆排混合。",
+
+pigeonhole:
+"鸽巢排序：为每个可能的值准备一个鸽巢。",
+
+alien:
+"外星排序：等待外星人帮忙排序。",
+
+centrifuge:
+"离心排序：整个柱状图缩放到 15% 并顺时针高速旋转，重元素被离心力甩到右侧。",
+
+gpt:
+"GPT排序：把数组发给 GPT，让它返回有序版本。GPT 一本正经地思考，最后真的排好了。",
+
+schrodinger:
+"薛定谔排序：在打开盒子之前，数组同时处于有序和无序的叠加态。观测一次就塌缩成有序。",
+
+timereverse:
+"时间倒流排序：从「已排好」的状态倒着执行到乱序，看起来像在排序，其实是时间倒流。",
+};
+
+
+/* =========================
+   随机数
+========================= */
+
+function randInt(a,b){
+  return Math.floor(Math.random()*(b-a+1))+a;
+}
+
+function shuffle(a){
+  const x=a.slice();
+  for(let i=x.length-1;i>0;i--){
+    const j=randInt(0,i);
+    [x[i],x[j]]=[x[j],x[i]];
+  }
+  return x;
+}
+
+function groupColor(i){
+  const hue=(Number(i)*137.507)%360;
+  return `hsl(${hue},80%,58%)`;
+}
+
+
+/* =========================
+   延迟
+========================= */
+
+function getDelay(){
+  let d=Number(spIn.value);
+  if(!Number.isFinite(d)) d=260;
+  d=Math.max(0,Math.min(800,d));
+  let mul=Number(speedMul.value);
+  if(!Number.isFinite(mul)) mul=1;
+  return Math.max(0, d/mul);
+}
+
+function wait(ms,token){
+  return new Promise(resolve=>{
+    if(!running || token!==runToken){
+      resolve(false);
+      return;
+    }
+    timer=setTimeout(()=>{
+      timer=null;
+      resolve(running && token===runToken);
+    },Math.max(0, ms));
+  });
+}
+
+function isSorted(){
+  for(let i=1;i<arr.length;i++){
+    if(arr[i]<arr[i-1]) return false;
+  }
+  return true;
+}
+
+
+/* =========================
+   停止
+========================= */
+
+function stopAll(){
+  running=false;
+  runToken++;
+  if(timer!==null){
+    clearTimeout(timer);
+    timer=null;
+  }
+  selectedIndexes=[];
+  beadGrid=null;
+  beadCurrentRow=-1;
+  beadMaxVal=0;
+  sleepAwakeIds=new Set();
+  sleepMovingId=null;
+  sleepIds=[];
+  sleepValueById=new Map();
+  sleepMovingIndex=-1;
+  sleepTargetIndex=-1;
+
+  viewInner.classList.remove("centrifuge-spin");
+  viewEl.classList.remove("centrifuge-shake");
+  viewInner.style.transition="";
+  viewInner.style.transform="";
+  viewInner.style.transformOrigin="";
+  viewInner.style.removeProperty("--spin-scale");
+
+  runBtn.disabled=false;
+  updateManualUI();
+}
+
+
+/* =========================
+   生成数组
+========================= */
+
+function genArray(){
+  stopAll();
+
+  let n=parseInt(sizeIn.value);
+  if(!Number.isFinite(n)) n=120;
+  n=Math.max(4,Math.min(1000,n));
+  sizeIn.value=n;
+
+  arr=[];
+  const step=210/Math.max(1,n-1);
+  for(let i=0;i<n;i++){
+    arr.push(30+i*step);
+  }
+  arr=shuffle(arr);
+
+  sleepIds=arr.map((_,i)=>i);
+  sleepValueById=new Map();
+  for(let i=0;i<arr.length;i++){
+    sleepValueById.set(sleepIds[i],arr[i]);
+  }
+
+  sleepAwakeIds=new Set();
+  sleepMovingId=null;
+
+  tryCnt=0;
+  cntEl.textContent="0";
+
+  lockPos=-1;
+  isWin=false;
+
+  lastGroupIds=null;
+  isGorbachevMode=false;
+
+  trumpProcessedCount=0;
+
+  sleepMovingIndex=-1;
+  sleepTargetIndex=-1;
+
+  beadGrid=null;
+  beadCurrentRow=-1;
+  beadMaxVal=0;
+
+  viewInner.classList.remove("centrifuge-spin");
+  viewEl.classList.remove("centrifuge-shake");
+  viewInner.style.transition="";
+  viewInner.style.transform="";
+  viewInner.style.transformOrigin="";
+  viewInner.style.removeProperty("--spin-scale");
+
+  killHistory = [];   // ★ 清空撤回历史
+
+  descEl.textContent=texts[typeSel.value];
+  render();
+}
+
+
+/* =========================
+   手动排序
+========================= */
+
+function updateManualUI(){
+  swapBtn.disabled=selectedIndexes.length!==2;
+  if(selectedIndexes.length===0){
+    selInfo.textContent="未选择柱子";
+  }else if(selectedIndexes.length===1){
+    selInfo.textContent=`已选择第 ${selectedIndexes[0]+1} 根`;
+  }else{
+    selInfo.textContent=`已选择第 ${selectedIndexes[0]+1}、${selectedIndexes[1]+1} 根`;
+  }
+}
+
+cancelSelBtn.onclick=function(){
+  selectedIndexes=[];
+  render();
+};
+
+swapBtn.onclick=function(){
+  if(selectedIndexes.length!==2) return;
+  const a=selectedIndexes[0];
+  const b=selectedIndexes[1];
+  [arr[a],arr[b]]=[arr[b],arr[a]];
+  if(sleepIds.length===arr.length){
+    [sleepIds[a],sleepIds[b]]=[sleepIds[b],sleepIds[a]];
+  }
+  selectedIndexes=[];
+  tryCnt++;
+  cntEl.textContent=tryCnt;
+  if(isSorted()){
+    isWin=true;
+    render();
+    descEl.textContent="手动排序：恭喜！你成功排好了！🎉";
+    return;
+  }
+  render();
+};
+
+
+/* =========================
+   珠排序
+========================= */
+
+function renderBeadColumn(d,h){
+  const maxPieces=60;
+  const unit=Math.max(1,Math.ceil(beadMaxVal/maxPieces));
+  const pieces=Math.max(1,Math.ceil(h/unit));
+  const stack=document.createElement("div");
+  stack.className="bead-stack";
+  for(let i=0;i<pieces;i++){
+    const p=document.createElement("div");
+    p.className="bead-piece";
+    if(beadCurrentRow>=0 && Math.floor(beadCurrentRow/unit)===i){
+      p.classList.add("active");
+    }
+    stack.appendChild(p);
+  }
+  d.appendChild(stack);
+}
+
+
+/* =========================
+   核心渲染
+========================= */
+
+function render(pivot=-1, pivot2=-1, hole=-1, less=-1, great=-1, k=-1, gnome=-1, gnomeSwap1=-1, gnomeSwap2=-1, patienceCurrent=-1, patiencePiles=null, extra=null){
+
+  viewEl.replaceChildren();
+
+  if(typeSel.value==="bead"){
+    for(let i=0;i<arr.length;i++){
+      const d=document.createElement("div");
+      d.className="bead-column";
+      d.dataset.index=i;
+      if(isWin) d.classList.add("bead-win");
+      if(selectedIndexes.includes(i)) d.classList.add("bead-selected");
+      renderBeadColumn(d,Math.max(1,Number(arr[i])));
+      viewEl.appendChild(d);
+    }
+    return;
+  }
+
+  for(let i=0;i<arr.length;i++){
+
+    const d=document.createElement("div");
+    d.className="bar";
+    d.dataset.index=i;
+
+    const h=Number(arr[i]);
+    d.style.height=Math.max(1,Number.isFinite(h)?h:1)+"px";
+
+    if(i===pivot) d.classList.add("bar-pivot");
+    if(i===hole) d.classList.add("bar-hole");
+
+    if(typeSel.value==="dualPivot"){
+      if(i===pivot) d.classList.add("bar-pivot1");
+      if(i===pivot2) d.classList.add("bar-pivot2");
+      if(i===less) d.classList.add("bar-less");
+      if(i===great) d.classList.add("bar-great");
+      if(i===k) d.classList.add("bar-k");
+    }
+
+    if(typeSel.value==="gnome"){
+      if(i===gnome) d.classList.add("bar-gnome");
+      if(i===gnomeSwap1 || i===gnomeSwap2) d.classList.add("bar-gnome-swap");
+    }
+
+    if(typeSel.value==="patience"){
+      if(i===patienceCurrent) d.classList.add("bar-patience-current");
+      if(patiencePiles && patiencePiles[i]!==undefined){
+        const color=bucketColor(patiencePiles[i],Math.max(1,patiencePiles[i]+1));
+        d.style.background=color;
+        d.style.boxShadow=`0 0 6px ${color}`;
+      }
+    }
+
+    if(extra && extra[i]!==undefined){
+      d.classList.add(extra[i]);
+    }
+
+    if(selectedIndexes.includes(i)) d.classList.add("selected");
+
+    if(typeSel.value==="sleep" && !isWin){
+      const id=sleepIds[i];
+      if(id===sleepMovingId){
+        d.classList.add("bar-sleep-waking");
+      }else if(sleepAwakeIds.has(id)){
+        d.classList.add("bar-waking");
+      }else{
+        d.classList.add("bar-sleeping");
+      }
+    }
+
+    if(isGorbachevMode && Array.isArray(lastGroupIds) && lastGroupIds[i]!==undefined){
+      d.style.background=groupColor(lastGroupIds[i]);
+    }else if(isWin){
+      d.classList.add("bar-win");
+    }else if(typeSel.value==="trump" && i<trumpProcessedCount){
+      d.classList.add("bar-trump-fixed");
+    }else if(typeSel.value!=="sleep" && i<=lockPos){
+      d.classList.add("bar-fixed");
+    }
+
+    d.onclick=function(){
+
+      // ===== 杀戮排序 =====
+      if(typeSel.value === "kill"){
+        if(isWin) return;
+        if(!killModeOn) return;
+
+        d.classList.add("bar-kill-flash");
+
+        setTimeout(function(){
+          killHistory.push({ index: i, value: arr[i] });
+          arr.splice(i, 1);
+          tryCnt++;
+          cntEl.textContent = tryCnt;
+
+          if(arr.length <= 1){
+            isWin = true;
+            render();
+            descEl.textContent = "杀戮排序：柱子已清空，胜利！🎉";
+            return;
+          }
+
+          if(isSorted()){
+    isWin = true;
+    render();
+    descEl.textContent = "杀戮排序：剩下的柱子已经有序！🔪";
+    return;
+  }
+
+  render();
+  descEl.textContent = `杀戮排序：已杀死第 ${i+1} 根柱子，还剩 ${arr.length} 根`;
+}, 260);
+
+        return;
+      }
+
+      // ===== 原有手动排序 =====
+      if(typeSel.value!=="manual") return;
+      if(isWin) return;
+      if(selectedIndexes.includes(i)){
+        selectedIndexes=selectedIndexes.filter(x=>x!==i);
+      }else if(selectedIndexes.length<2){
+        selectedIndexes.push(i);
+      }
+      render();
+    };
+
+    viewEl.appendChild(d);
+  }
+
+  updateManualUI();
+}
+
+
+/* =========================
+   缩放
+========================= */
+
+zoomRange.oninput=function(){
+  const x=Number(zoomRange.value);
+  viewInner.style.transform=`scale(${x})`;
+  zoomText.textContent=Math.round(x*100)+"%";
+};
+
+
+/* =========================
+   类型切换
+========================= */
+
+typeSel.onchange=function(){
+  stopAll();
+  manualCtrl.style.display=typeSel.value==="manual"?"flex":"none";
+  document.getElementById("grainCountLabel").style.display =
+    typeSel.value==="hourglass" ? "inline-flex" : "none";
+  killBtn.style.display =
+    typeSel.value==="kill" ? "inline-block" : "none";
+  killUndoBtn.style.display =
+    typeSel.value==="kill" ? "inline-block" : "none";
+  if(typeSel.value !== "kill"){
+    killModeOn = false;
+    killBtn.textContent = "杀戮模式：关";
+    killBtn.style.background = "#2574e8";
+  }
+  viewInner.classList.remove("centrifuge-spin");
+  viewEl.classList.remove("centrifuge-shake");
+  viewInner.style.transition="";
+  viewInner.style.transform="";
+  viewInner.style.transformOrigin="";
+  viewInner.style.removeProperty("--spin-scale");
+
+  killHistory = [];   // ★ 清空撤回历史
+
+  descEl.textContent=texts[typeSel.value];
+  render();
+};
+
+
+/* =====================================================
+   冒泡排序
+===================================================== */
+
+async function bubbleSwap(i,token){
+  if(!running || token!==runToken) return false;
+  const bars=Array.from(viewEl.children);
+  const left=bars[i];
+  const right=bars[i+1];
+  if(!left||!right) return false;
+
+  left.classList.add("bubble-compare","bubble-moving");
+  right.classList.add("bubble-compare","bubble-moving");
+  left.style.transform="translateX(7px)";
+  right.style.transform="translateX(-7px)";
+
+  descEl.textContent=`冒泡排序：第 ${i+1}、${i+2} 根柱子交换中……`;
+  tryCnt++;
+  cntEl.textContent=tryCnt;
+
+  if(!(await wait(Math.max(140,Math.min(500,getDelay())),token))) return false;
+
+  [arr[i],arr[i+1]]=[arr[i+1],arr[i]];
+  left.style.transform="";
+  right.style.transform="";
+  left.classList.remove("bubble-compare","bubble-moving");
+  right.classList.remove("bubble-compare","bubble-moving");
+  render();
+
+  if(isSorted()){
+    isWin=true;
+    render();
+    descEl.textContent="冒泡排序：排序完成！🎉";
+    running=false;
+    runBtn.disabled=false;
+    return false;
+  }
+
+  return true;
+}
+
+/* =====================================================
+   选择排序
+===================================================== */
+
+async function selectionRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  cntEl.textContent=tryCnt;
+  isWin=false;
+  render();
+  descEl.textContent="选择排序：开始……";
+  if(!(await wait(Math.max(300,getDelay()),token))) return;
+
+  const n=arr.length;
+
+  for(let i=0;i<n-1;i++){
+    if(!running || token!==runToken) return;
+
+    let minIdx=i;
+    render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[i]:"bar-select-min"});
+    descEl.textContent=`选择排序：第 ${i+1} 轮，先假设第 ${i+1} 根是最小值`;
+    if(!(await wait(Math.max(0, getDelay()*0.4),token))) return;
+
+    for(let j=i+1;j<n;j++){
+      if(!running || token!==runToken) return;
+
+      const extra={};
+      extra[i] = "bar-select-min";
+      extra[j] = "bar-select-scan";
+      render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,extra);
+
+      descEl.textContent=`选择排序：比较第 ${j+1} 根 (${arr[j].toFixed(1)}) 与当前最小 (${arr[minIdx].toFixed(1)})`;
+      if(!(await wait(Math.max(0, getDelay()*0.3),token))) return;
+
+      tryCnt++;
+      cntEl.textContent=tryCnt;
+
+      if(arr[j] < arr[minIdx]){
+        minIdx=j;
+        render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[minIdx]:"bar-select-min"});
+        descEl.textContent=`选择排序：发现更小的柱子 ${arr[j].toFixed(1)}，记住第 ${j+1} 位`;
+        if(!(await wait(Math.max(0, getDelay()*0.3),token))) return;
+      }
+    }
+
+    if(minIdx !== i){
+      descEl.textContent=`选择排序：第 ${i+1} 轮结束，把第 ${minIdx+1} 位的最小值 ${arr[minIdx].toFixed(1)} 换到第 ${i+1} 位`;
+
+      const bars=Array.from(viewEl.children);
+      const a=bars[i];
+      const b=bars[minIdx];
+      if(a && b){
+        const distance=(minIdx-i)*7;
+        const moveTime=Math.max(300,Math.min(700,getDelay()*1.2));
+
+        a.classList.add("bar-select-min");
+        b.classList.add("bar-select-min");
+
+        a.style.transition=`transform ${moveTime}ms cubic-bezier(.22,.75,.25,1)`;
+        b.style.transition=`transform ${moveTime}ms cubic-bezier(.22,.75,.25,1)`;
+        a.style.transform=`translateX(${distance}px)`;
+        b.style.transform=`translateX(${-distance}px)`;
+        a.style.zIndex="60";
+        b.style.zIndex="60";
+
+        if(!(await wait(moveTime,token))) return;
+
+        [arr[i],arr[minIdx]]=[arr[minIdx],arr[i]];
+        tryCnt++;
+        cntEl.textContent=tryCnt;
+
+        for(const bar of viewEl.children){
+          bar.style.transition="";
+          bar.style.transform="";
+          bar.style.zIndex="";
+        }
+        render();
+      }
+    }
+
+    render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[i]:"bar-select-sorted"});
+    descEl.textContent=`选择排序：第 ${i+1} 位已固定为 ${arr[i].toFixed(1)}`;
+    if(!(await wait(Math.max(0, getDelay()*0.35),token))) return;
+
+    if(isSorted()){
+      isWin=true;
+      render();
+      descEl.textContent="选择排序：排序完成！🎉";
+      running=false;
+      runBtn.disabled=false;
+      return;
+    }
+  }
+
+  if(running && token===runToken){
+    if(!isSorted()) arr.sort((a,b)=>a-b);
+    isWin=true;
+    render();
+    descEl.textContent="选择排序：排序完成！🎉";
+    running=false;
+    runBtn.disabled=false;
+  }
+}
+
+/* =====================================================
+   MSD 基数排序
+===================================================== */
+
+async function msdRadixRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  cntEl.textContent=tryCnt;
+  isWin=false;
+  render();
+  descEl.textContent="MSD基数排序：开始……";
+  if(!(await wait(Math.max(300,getDelay()),token))) return;
+
+  arr = arr.map(x=>Math.max(0,Math.round(Number(x))));
+  const maxVal = Math.max(...arr, 1);
+
+  let maxExp = 1;
+  while(Math.floor(maxVal/maxExp) >= 10) maxExp *= 10;
+
+  async function msdSort(lo, hi, exp){
+    if(lo >= hi || exp < 1) return;
+
+    const buckets = Array.from({length:10}, ()=>[]);
+    const valueBucket = {};
+
+    for(let i=lo;i<=hi;i++){
+      const digit = Math.floor(arr[i]/exp) % 10;
+      buckets[digit].push(arr[i]);
+      valueBucket[i] = digit;
+
+      if(!running || token!==runToken) return;
+      render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[i]:"bar-msd-current"});
+      if(!(await wait(Math.max(0, getDelay()*0.15),token))) return;
+    }
+
+    let idx = lo;
+    const resultBucket = {};
+    for(let d=0;d<10;d++){
+      for(const val of buckets[d]){
+        arr[idx] = val;
+        resultBucket[idx] = d;
+        idx++;
+      }
+    }
+
+    render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{});
+    const bars = Array.from(viewEl.children);
+    for(let k=lo;k<=hi;k++){
+      if(bars[k]){
+        const color = bucketColor(resultBucket[k],10);
+        bars[k].style.background = color;
+        bars[k].style.boxShadow = `0 0 6px ${color}`;
+      }
+    }
+
+    descEl.textContent = `MSD基数排序：按第 ${exp} 位分桶完成，递归处理每个桶……`;
+    if(!(await wait(Math.max(200,getDelay()*0.6),token))) return;
+
+    let cur = lo;
+    for(let d=0;d<10;d++){
+      const size = buckets[d].length;
+      if(size > 1){
+        await msdSort(cur, cur+size-1, Math.floor(exp/10));
+      }
+      cur += size;
+    }
+  }
+
+  await msdSort(0, arr.length-1, maxExp);
+
+  if(!isSorted()) arr.sort((a,b)=>a-b);
+  isWin=true;
+  render();
+  descEl.textContent="MSD基数排序：排序完成！🎉";
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   C++ 标准库排序
+===================================================== */
+
+async function cppSortRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  cntEl.textContent=tryCnt;
+  isWin=false;
+  render();
+  descEl.textContent="C++标准库排序：模拟 std::sort……";
+  if(!(await wait(Math.max(300,getDelay()),token))) return;
+
+  const n = arr.length;
+  const maxDepth = 2 * Math.floor(Math.log2(n));
+
+  async function insertionSort(lo, hi){
+    for(let i=lo+1;i<=hi;i++){
+      if(!running || token!==runToken) return;
+      const key = arr[i];
+      let j = i-1;
+      while(j>=lo && arr[j] > key){
+        arr[j+1] = arr[j];
+        j--;
+        tryCnt++;
+        cntEl.textContent = tryCnt;
+        render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[j+1]:"bar-cpp-sort"});
+        if(!(await wait(Math.max(0, getDelay()*0.08),token))) return;
+      }
+      arr[j+1] = key;
+      render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[j+1]:"bar-cpp-sort-fixed"});
+      if(!(await wait(Math.max(0, getDelay()*0.1),token))) return;
+    }
+  }
+
+  async function heapSort(lo, hi){
+    const size = hi - lo + 1;
+    async function siftDown(start, end){
+      let root = start;
+      while(root*2+1 <= end){
+        let child = root*2+1;
+        if(child+1 <= end && arr[lo+child] < arr[lo+child+1]) child++;
+        if(arr[lo+root] < arr[lo+child]){
+          [arr[lo+root], arr[lo+child]] = [arr[lo+child], arr[lo+root]];
+          tryCnt++;
+          cntEl.textContent = tryCnt;
+          render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[lo+root]:"bar-cpp-sort",[lo+child]:"bar-cpp-sort"});
+          if(!(await wait(Math.max(0, getDelay()*0.1),token))) return;
+          root = child;
+        }else break;
+      }
+    }
+    for(let i=Math.floor(size/2)-1;i>=0;i--){
+      if(!running || token!==runToken) return;
+      await siftDown(i, size-1);
+    }
+    for(let i=size-1;i>0;i--){
+      [arr[lo], arr[lo+i]] = [arr[lo+i], arr[lo]];
+      tryCnt++;
+      cntEl.textContent = tryCnt;
+      render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[lo]:"bar-cpp-sort-fixed",[lo+i]:"bar-cpp-sort-fixed"});
+      if(!(await wait(Math.max(0, getDelay()*0.15),token))) return;
+      await siftDown(0, i-1);
+    }
+  }
+
+  async function quickSort(lo, hi, depth){
+    if(lo >= hi) return;
+    if(depth > maxDepth){
+      descEl.textContent = `C++标准库排序：递归过深，改用堆排处理 [${lo+1}, ${hi+1}]`;
+      if(!(await wait(Math.max(100,getDelay()*0.5),token))) return;
+      await heapSort(lo, hi);
+      return;
+    }
+    if(hi - lo < 16){
+      await insertionSort(lo, hi);
+      return;
+    }
+
+    const pivot = arr[lo];
+    let i = lo, j = hi;
+    while(i < j){
+      if(!running || token!==runToken) return;
+      while(i<j && arr[j] >= pivot) j--;
+      if(i<j){ arr[i] = arr[j]; i++; }
+      while(i<j && arr[i] <= pivot) i++;
+      if(i<j){ arr[j] = arr[i]; j--; }
+    }
+    arr[i] = pivot;
+    tryCnt++;
+    cntEl.textContent = tryCnt;
+    render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[i]:"bar-cpp-sort"});
+    if(!(await wait(Math.max(80,getDelay()*0.4),token))) return;
+
+    await quickSort(lo, i-1, depth+1);
+    await quickSort(i+1, hi, depth+1);
+  }
+
+  await quickSort(0, n-1, 0);
+
+  if(!isSorted()) arr.sort((a,b)=>a-b);
+  isWin=true;
+  render();
+  descEl.textContent="C++标准库排序：排序完成！🎉";
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   C++ 稳定排序
+===================================================== */
+
+async function cppStableSortRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  cntEl.textContent=tryCnt;
+  isWin=false;
+  render();
+  descEl.textContent="C++稳定排序：模拟 std::stable_sort（归并）……";
+  if(!(await wait(Math.max(300,getDelay()),token))) return;
+
+  const n = arr.length;
+  const tmp = new Array(n);
+
+  async function mergeSort(lo, hi){
+    if(lo >= hi) return;
+    const mid = Math.floor((lo+hi)/2);
+    await mergeSort(lo, mid);
+    await mergeSort(mid+1, hi);
+
+    for(let i=lo;i<=hi;i++) tmp[i] = arr[i];
+    let i = lo, j = mid+1, k = lo;
+    while(i <= mid && j <= hi){
+      if(!running || token!==runToken) return;
+      render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[k]:"bar-cpp-stable"});
+      if(tmp[i] <= tmp[j]){
+        arr[k++] = tmp[i++];
+      } else {
+        arr[k++] = tmp[j++];
+      }
+      tryCnt++;
+      cntEl.textContent = tryCnt;
+      if(!(await wait(Math.max(0, getDelay()*0.08),token))) return;
+    }
+    while(i <= mid){ arr[k++] = tmp[i++]; tryCnt++; cntEl.textContent=tryCnt;
+      if(!(await wait(Math.max(0, getDelay()*0.05),token))) return; }
+    while(j <= hi){ arr[k++] = tmp[j++]; tryCnt++; cntEl.textContent=tryCnt;
+      if(!(await wait(Math.max(0, getDelay()*0.05),token))) return; }
+
+    render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{});
+    for(let m=lo;m<=hi;m++){
+      const bar = viewEl.children[m];
+      if(bar) bar.classList.add("bar-cpp-stable-fixed");
+    }
+    if(!(await wait(Math.max(80,getDelay()*0.3),token))) return;
+  }
+
+  await mergeSort(0, n-1);
+
+  if(!isSorted()) arr.sort((a,b)=>a-b);
+  isWin=true;
+  render();
+  descEl.textContent="C++稳定排序：排序完成！🎉";
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   Bitonic 排序
+===================================================== */
+
+async function bitonicRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  cntEl.textContent=tryCnt;
+  isWin=false;
+  render();
+  descEl.textContent="Bitonic排序：开始……";
+  if(!(await wait(Math.max(300,getDelay()),token))) return;
+
+  let n = 1;
+  while(n < arr.length) n *= 2;
+  while(arr.length < n) arr.push(Infinity);
+
+  async function compareSwap(i, j, dir){
+    if(arr[i] > arr[j] === dir){
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+      tryCnt++;
+      cntEl.textContent = tryCnt;
+      render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{
+        [i]: dir ? "bar-bitonic-up" : "bar-bitonic-down",
+        [j]: dir ? "bar-bitonic-up" : "bar-bitonic-down"
+      });
+      if(!(await wait(Math.max(0, getDelay()*0.15),token))) return;
+    }
+  }
+
+  async function bitonicMerge(lo, cnt, dir){
+    if(cnt <= 1) return;
+    const k = cnt / 2;
+    for(let i=lo; i<lo+k; i++){
+      if(!running || token!==runToken) return;
+      await compareSwap(i, i+k, dir);
+    }
+    await bitonicMerge(lo, k, dir);
+    await bitonicMerge(lo+k, k, dir);
+  }
+
+  async function bitonicSort(lo, cnt, dir){
+    if(cnt <= 1) return;
+    const k = cnt / 2;
+    await bitonicSort(lo, k, true);
+    await bitonicSort(lo+k, k, false);
+    await bitonicMerge(lo, cnt, dir);
+  }
+
+  await bitonicSort(0, n, true);
+
+  arr = arr.filter(x => x !== Infinity);
+  arr.sort((a,b)=>a-b);
+
+  isWin=true;
+  render();
+  descEl.textContent="Bitonic排序：排序完成！🎉";
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   沙漏排序（Hourglass Sort · 物理版 v27）
+   规则：
+   - 沙粒下落（正下 / 左下 / 右下 / 上仓向中心滑）
+   - ★ 下仓沙粒数量连续几帧不再增加 → 开启滑动模式
+   - 上仓空了之后停止滑动，沙丘稳定后结束
+   - 用计数器维护"上仓剩余沙粒数"，检测很快
+===================================================== */
+
+async function hourglassRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  cntEl.textContent=tryCnt;
+  isWin=false;
+  hourglassClearRequest = false;
+
+  viewEl.replaceChildren();
+
+  const COLS = 220;
+  const ROWS = 140;
+  const CELL = 2;
+  const W = COLS * CELL;
+  const H = ROWS * CELL;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = W;
+  canvas.height = H;
+  canvas.style.cssText = "display:block;margin:0 auto;background:#0f111a;border-radius:8px;";
+  viewEl.appendChild(canvas);
+
+  const ctx = canvas.getContext("2d");
+
+  const cx = W / 2;
+  const topY = 8;
+  const neckY = H/2 - 6;
+  const neckY2 = H/2 + 6;
+  const bottomY = H - 8;
+  const topHalfW = 210;
+  const neckHalfW = 8;
+  const bottomHalfW = 210;
+  const centerC = Math.floor(COLS / 2);
+
+  function insideTop(px, py){
+    if(py < topY || py > neckY) return false;
+    const t = (py - topY) / (neckY - topY);
+    const halfW = topHalfW + (neckHalfW - topHalfW) * t;
+    return Math.abs(px - cx) <= halfW;
+  }
+  function insideNeck(px, py){
+    return py >= neckY && py <= neckY2 && Math.abs(px - cx) <= neckHalfW;
+  }
+  function insideBottom(px, py){
+    if(py < neckY2 || py > bottomY) return false;
+    const t = (py - neckY2) / (bottomY - neckY2);
+    const halfW = neckHalfW + (bottomHalfW - neckHalfW) * t;
+    return Math.abs(px - cx) <= halfW;
+  }
+
+  const regionMap = new Uint8Array(COLS * ROWS);
+  const idx = (c,r) => r*COLS + c;
+
+  for(let r=0;r<ROWS;r++){
+    for(let c=0;c<COLS;c++){
+      const px = c*CELL + CELL/2;
+      const py = r*CELL + CELL/2;
+      if(insideTop(px, py)) regionMap[idx(c,r)] = 1;
+      else if(insideNeck(px, py)) regionMap[idx(c,r)] = 2;
+      else if(insideBottom(px, py)) regionMap[idx(c,r)] = 3;
+      else regionMap[idx(c,r)] = 0;
+    }
+  }
+
+  function inSand(c,r){
+    if(c<0||c>=COLS||r<0||r>=ROWS) return false;
+    return regionMap[idx(c,r)] !== 0;
+  }
+
+  let grainCount = parseInt(grainCountIn.value);
+  if(!Number.isFinite(grainCount) || grainCount < 10) grainCount = 10;
+  if(grainCount > 20000) grainCount = 20000;
+
+  const grid = new Uint8Array(COLS * ROWS);
+
+  const topCellsByBottom = [];
+  for(let r=ROWS-1; r>=0; r--){
+    for(let c=0; c<COLS; c++){
+      if(regionMap[idx(c,r)] === 1) topCellsByBottom.push([c,r]);
+    }
+  }
+
+  const actualCount = Math.min(grainCount, topCellsByBottom.length);
+  for(let i=0;i<actualCount;i++){
+    const [c,r] = topCellsByBottom[i];
+    grid[idx(c,r)] = 1;
+  }
+
+  function drawShell(){
+    ctx.clearRect(0,0,W,H);
+
+    ctx.fillStyle = "rgba(255,255,255,.02)";
+    ctx.fillRect(0,0,W,H);
+
+    ctx.beginPath();
+    ctx.moveTo(cx - topHalfW, topY);
+    ctx.lineTo(cx + topHalfW, topY);
+    ctx.lineTo(cx + neckHalfW, neckY);
+    ctx.lineTo(cx - neckHalfW, neckY);
+    ctx.closePath();
+    ctx.strokeStyle = "#c8a04a";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = "rgba(200,160,70,.06)";
+    ctx.fill();
+
+    ctx.fillStyle = "#c8a04a";
+    ctx.fillRect(cx - neckHalfW, neckY, neckHalfW*2, neckY2 - neckY);
+
+    ctx.beginPath();
+    ctx.moveTo(cx - neckHalfW, neckY2);
+    ctx.lineTo(cx + neckHalfW, neckY2);
+    ctx.lineTo(cx + bottomHalfW, bottomY);
+    ctx.lineTo(cx - bottomHalfW, bottomY);
+    ctx.closePath();
+    ctx.strokeStyle = "#c8a04a";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = "rgba(200,160,70,.06)";
+    ctx.fill();
+  }
+
+  function drawGrains(final){
+    if(final){
+      ctx.shadowColor = "#ffd700";
+      ctx.shadowBlur = 4;
+    }
+
+    for(let r=0;r<ROWS;r++){
+      for(let c=0;c<COLS;c++){
+        if(!grid[idx(c,r)]) continue;
+        const reg = regionMap[idx(c,r)];
+
+        if(final){
+          ctx.fillStyle = "#ffd700";
+        } else if(reg === 1){
+          ctx.fillStyle = "#e8c878";
+        } else if(reg === 2){
+          ctx.fillStyle = "#ffe97a";
+        } else {
+          ctx.fillStyle = "#c8963c";
+        }
+        ctx.fillRect(c*CELL, r*CELL, CELL, CELL);
+      }
+    }
+
+    ctx.shadowBlur = 0;
+  }
+
+  function swap(c1,r1,c2,r2){
+    const a = grid[idx(c1,r1)];
+    const b = grid[idx(c2,r2)];
+    grid[idx(c1,r1)] = b;
+    grid[idx(c2,r2)] = a;
+  }
+
+  function step(allowSlide){
+    let moved = 0;
+    let bottomMoved = 0;
+    const candidates = [];
+
+    for(let r=0; r<ROWS-1; r++){
+      for(let c=0; c<COLS; c++){
+        if(!grid[idx(c,r)]) continue;
+        const reg = regionMap[idx(c,r)];
+        if(reg === 0) continue;
+
+        // 1. 正下方空 → 往下
+        if(inSand(c, r+1) && !grid[idx(c, r+1)]){
+          candidates.push([c, r, 0]);
+          continue;
+        }
+
+        // 2. 左下 / 右下（随机）
+        const leftFree  = (c>0)        && inSand(c-1, r+1) && !grid[idx(c-1, r+1)];
+        const rightFree = (c<COLS-1)   && inSand(c+1, r+1) && !grid[idx(c+1, r+1)];
+
+        if(leftFree && rightFree){
+          candidates.push([c, r, Math.random() < 0.5 ? -1 : 1]);
+          continue;
+        } else if(leftFree){
+          candidates.push([c, r, -1]);
+          continue;
+        } else if(rightFree){
+          candidates.push([c, r, 1]);
+          continue;
+        }
+
+        // 3. 上仓斜边：正下方是外部 → 向中心滑一格
+        if(reg === 1 && c !== centerC){
+          const belowOut = !inSand(c, r+1);
+          if(belowOut){
+            const d = c < centerC ? 1 : -1;
+            const nc = c + d;
+            if(nc>=0 && nc<COLS && inSand(nc, r) && !grid[idx(nc, r)]){
+              candidates.push([c, r, 2, nc]);
+            }
+          }
+        }
+      }
+    }
+
+    // 打乱顺序
+    for(let i=candidates.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [candidates[i],candidates[j]] = [candidates[j],candidates[i]];
+    }
+
+    const batch = Math.max(50, Math.floor(actualCount / 10));
+    const N = Math.min(batch, candidates.length);
+
+    for(let k=0;k<N;k++){
+      const cand = candidates[k];
+      const c = cand[0];
+      const r = cand[1];
+      const dir = cand[2];
+
+      if(!grid[idx(c,r)]) continue;
+
+      if(dir === 0){
+        if(inSand(c, r+1) && !grid[idx(c, r+1)]){
+          const regFrom = regionMap[idx(c,r)];
+          const regTo   = regionMap[idx(c,r+1)];
+          if(regFrom !== 3 && regTo === 3) bottomMoved++;
+          swap(c, r, c, r+1);
+          moved++;
+        }
+      } else if(dir === -1){
+        if(c>0 && inSand(c-1, r+1) && !grid[idx(c-1, r+1)]){
+          const regFrom = regionMap[idx(c,r)];
+          const regTo   = regionMap[idx(c-1,r+1)];
+          if(regFrom !== 3 && regTo === 3) bottomMoved++;
+          swap(c, r, c-1, r+1);
+          moved++;
+        }
+      } else if(dir === 1){
+        if(c<COLS-1 && inSand(c+1, r+1) && !grid[idx(c+1, r+1)]){
+          const regFrom = regionMap[idx(c,r)];
+          const regTo   = regionMap[idx(c+1,r+1)];
+          if(regFrom !== 3 && regTo === 3) bottomMoved++;
+          swap(c, r, c+1, r+1);
+          moved++;
+        }
+      } else if(dir === 2){
+        const nc = cand[3];
+        if(inSand(nc, r) && !grid[idx(nc, r)]){
+          swap(c, r, nc, r);
+          moved++;
+        }
+      }
+    }
+
+    // ===== 坡度限制：允许滑动时每帧都滑 =====
+    if(allowSlide){
+      const slopeCandidates = [];
+      for(let r=0; r<ROWS-1; r++){
+        for(let c=0; c<COLS; c++){
+          if(!grid[idx(c,r)]) continue;
+          if(regionMap[idx(c,r)] !== 3) continue;
+
+          const slopeDirs = Math.random() < 0.5 ? [-1, 1] : [1, -1];
+          for(const d of slopeDirs){
+            const nc = c + d;
+            if(nc<0 || nc>=COLS) continue;
+            if(!inSand(nc, r)) continue;
+            if(grid[idx(nc, r)]) continue;
+
+            slopeCandidates.push([c, r, d, nc]);
+            break;
+          }
+        }
+      }
+
+      for(let i=slopeCandidates.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [slopeCandidates[i],slopeCandidates[j]] = [slopeCandidates[j],slopeCandidates[i]];
+      }
+
+      const slopeBatch = Math.min(2000, Math.floor(slopeCandidates.length / 2));
+      for(let k=0;k<slopeBatch;k++){
+        const [c, r, d, nc] = slopeCandidates[k];
+        if(!grid[idx(c,r)]) continue;
+        if(grid[idx(nc, r)]) continue;
+        swap(c, r, nc, r);
+        moved++;
+      }
+    }
+
+    return { moved, bottomMoved };
+  }
+
+  drawShell();
+  drawGrains(false);
+
+  let lastMoved = -1;
+  let slideMode = false;
+  let sandAboveCount = actualCount;   // 上仓+细颈 剩余沙粒数
+
+  // ★ 用"下仓沙粒数量是否增长"来判断是否开启滑动
+  let lastBottomCount = -1;
+  let noGrowFrames = 0;
+  const NO_GROW_THRESHOLD = 30;       // 连续 30 帧没增长 → 开始滑
+
+  descEl.textContent = `沙漏排序：${actualCount} 粒沙，开始下落……`;
+  if(!(await wait(Math.max(400, getDelay()), token))) return;
+
+  let stall = 0;
+  let topEmpty = false;
+
+  while(true){
+    if(!running || token!==runToken) return;
+
+    if(hourglassClearRequest){
+      hourglassClearRequest = false;
+      for(let r=0;r<ROWS;r++){
+        for(let c=0;c<COLS;c++){
+          if(regionMap[idx(c,r)] === 3) grid[idx(c,r)] = 0;
+        }
+      }
+      sandAboveCount = actualCount;
+      topEmpty = false;
+      slideMode = false;
+      lastBottomCount = -1;
+      noGrowFrames = 0;
+      descEl.textContent = "沙漏排序：下仓已清空……";
+      drawShell();
+      drawGrains(false);
+      if(!(await wait(200, token))) return;
+    }
+
+    const allowSlide = slideMode && !topEmpty;
+
+    const stepResult = step(allowSlide);
+    const totalMoved = stepResult.moved;
+
+    // 用计数器维护上仓剩余沙粒数
+    sandAboveCount -= stepResult.bottomMoved;
+    if(sandAboveCount < 0) sandAboveCount = 0;
+
+    const bottomCount = actualCount - sandAboveCount;
+
+    // ★ 下仓不再增长 → 连续几帧后开启滑动
+    if(!topEmpty){
+      if(bottomCount === lastBottomCount){
+        noGrowFrames++;
+        if(!slideMode && noGrowFrames >= NO_GROW_THRESHOLD){
+          slideMode = true;
+        }
+      } else {
+        noGrowFrames = 0;
+      }
+      lastBottomCount = bottomCount;
+    }
+
+    drawShell();
+    drawGrains(false);
+
+    tryCnt++;
+    cntEl.textContent = tryCnt;
+
+    if(!topEmpty && sandAboveCount <= 0){
+      topEmpty = true;
+      descEl.textContent = "沙漏排序：上仓已空，沙粒正在堆成沙丘……";
+      if(!(await wait(Math.max(200, getDelay()*0.5), token))) return;
+    }
+
+    if(!topEmpty){
+      descEl.textContent = `沙漏排序：下仓已有 ${bottomCount} / ${actualCount} 粒沙${slideMode ? "（滑动中）" : ""}`;
+    } else {
+      descEl.textContent = `沙漏排序：沙丘堆积中…… (${bottomCount} 粒沙)`;
+    }
+
+    // 结束判定
+    if(totalMoved === 0){
+      stall++;
+      if(topEmpty && stall > 200) break;
+      if(!topEmpty && stall > 3000) break;
+    } else {
+      stall = 0;
+    }
+
+    lastMoved = totalMoved;
+
+    if(!(await wait(Math.max(12, getDelay()*0.04), token))) return;
+  }
+
+  drawShell();
+  drawGrains(true);
+
+  arr.sort((a,b)=>a-b);
+  isWin = true;
+  descEl.textContent = "沙漏排序：沙粒全部落下，沙丘形成！⏳";
+  running = false;
+  runBtn.disabled = false;
+}
+
+/* =====================================================
+   插入排序
+===================================================== */
+
+async function insertionRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  cntEl.textContent=tryCnt;
+  isWin=false;
+  render();
+  descEl.textContent="插入排序：开始，像整理扑克牌一样……";
+  if(!(await wait(Math.max(300,getDelay()),token))) return;
+
+  const n=arr.length;
+
+  for(let i=1;i<n;i++){
+    if(!running || token!==runToken) return;
+
+    const key=arr[i];
+    let j=i-1;
+
+    render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[i]:"bar-insert-key"});
+    descEl.textContent=`插入排序：取出第 ${i+1} 根柱子 (${key.toFixed(1)})，向左寻找插入位置……`;
+    if(!(await wait(Math.max(0, getDelay()*0.4),token))) return;
+
+    while(j>=0 && arr[j]>key){
+      if(!running || token!==runToken) return;
+
+      render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[j]:"bar-insert-compare",[j+1]:"bar-insert-key"});
+      descEl.textContent=`插入排序：第 ${j+1} 根 (${arr[j].toFixed(1)}) > ${key.toFixed(1)}，向右挪一位`;
+      if(!(await wait(Math.max(0, getDelay()*0.35),token))) return;
+
+      arr[j+1]=arr[j];
+      tryCnt++;
+      cntEl.textContent=tryCnt;
+      render();
+      j--;
+    }
+
+    arr[j+1]=key;
+    tryCnt++;
+    cntEl.textContent=tryCnt;
+    render();
+    descEl.textContent=`插入排序：第 ${i+1} 根柱子 (${key.toFixed(1)}) 已插入到第 ${j+2} 位`;
+    if(!(await wait(Math.max(0, getDelay()*0.35),token))) return;
+
+    if(isSorted()){
+      isWin=true;
+      render();
+      descEl.textContent="插入排序：排序完成！🎉";
+      running=false;
+      runBtn.disabled=false;
+      return;
+    }
+  }
+
+  if(running && token===runToken){
+    if(!isSorted()) arr.sort((a,b)=>a-b);
+    isWin=true;
+    render();
+    descEl.textContent="插入排序：排序完成！🎉";
+    running=false;
+    runBtn.disabled=false;
+  }
+}
+
+async function bubbleRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  isWin=false;
+  render();
+  descEl.textContent="冒泡排序：开始从左到右比较相邻柱子……";
+
+  const n=arr.length;
+  for(let end=n-1;end>0;end--){
+    let changed=false;
+    for(let i=0;i<end;i++){
+      if(!running || token!==runToken) return;
+      const bars=Array.from(viewEl.children);
+      const a=bars[i];
+      const b=bars[i+1];
+      if(!a||!b) continue;
+      a.classList.add("bubble-compare");
+      b.classList.add("bubble-compare");
+      descEl.textContent=`冒泡排序：比较第 ${i+1} 和第 ${i+2} 根柱子`;
+      if(!(await wait(Math.max(0, getDelay()*0.3),token))) return;
+      a.classList.remove("bubble-compare");
+      b.classList.remove("bubble-compare");
+      if(arr[i]>arr[i+1]){
+        changed=true;
+        if(!(await bubbleSwap(i,token))) return;
+      }
+    }
+    if(!changed) break;
+  }
+
+  if(running && token===runToken){
+    if(!isSorted()) arr.sort((a,b)=>a-b);
+    isWin=true;
+    render();
+    descEl.textContent="冒泡排序：排序完成！";
+    running=false;
+    runBtn.disabled=false;
+  }
+}
+
+/* =====================================================
+   TimSort
+===================================================== */
+
+const TIM_RUN_SIZE=16;
+
+async function timSwap(i,j,token){
+  if(!running || token!==runToken) return false;
+  if(i===j) return true;
+  const bars=Array.from(viewEl.children);
+  const a=bars[i];
+  const b=bars[j];
+  if(!a||!b) return false;
+  a.classList.add("tim-compare");
+  b.classList.add("tim-compare");
+  const distance=(j-i)*7;
+  a.style.transform=`translateX(${distance}px)`;
+  b.style.transform=`translateX(${-distance}px)`;
+  tryCnt++;
+  cntEl.textContent=tryCnt;
+  if(!(await wait(Math.max(80,Math.min(350,getDelay()*0.7)),token))) return false;
+  [arr[i],arr[j]]=[arr[j],arr[i]];
+  a.style.transform="";
+  b.style.transform="";
+  a.classList.remove("tim-compare");
+  b.classList.remove("tim-compare");
+  render();
+  return true;
+}
+
+async function timInsertionSort(left,right,token,runNo,totalRuns){
+  for(let i=left+1;i<=right;i++){
+    if(!running || token!==runToken) return false;
+    let j=i;
+    while(j>left && arr[j]<arr[j-1]){
+      const bars=Array.from(viewEl.children);
+      if(bars[j]) bars[j].classList.add("tim-compare");
+      if(bars[j-1]) bars[j-1].classList.add("tim-compare");
+      descEl.textContent=`蒂姆排序：正在整理第 ${runNo} / ${totalRuns} 个小段`;
+      if(!(await wait(Math.max(0, getDelay()*0.25),token))) return false;
+      if(!(await timSwap(j-1,j,token))) return false;
+      j--;
+    }
+    for(let k=left;k<=right;k++){
+      const bar=viewEl.children[k];
+      if(bar) bar.classList.add("tim-run");
+    }
+  }
+  return true;
+}
+
+async function timMerge(left,mid,right,token){
+  if(!running || token!==runToken) return false;
+  descEl.textContent=`蒂姆排序：正在合并第 ${left+1}～${mid+1} 与第 ${mid+2}～${right+1} 根柱子`;
+  let i=left;
+  let j=mid+1;
+  while(i<=mid && j<=right){
+    if(!running || token!==runToken) return false;
+    const bars=Array.from(viewEl.children);
+    if(bars[i]) bars[i].classList.add("tim-compare");
+    if(bars[j]) bars[j].classList.add("tim-compare");
+    if(!(await wait(Math.max(0, getDelay()*0.18),token))) return false;
+    if(arr[i]<=arr[j]){
+      if(bars[i]) bars[i].classList.remove("tim-compare");
+      i++;
+    }else{
+      let k=j;
+      while(k>i){
+        if(!(await timSwap(k-1,k,token))) return false;
+        k--;
+      }
+      mid++;
+      i++;
+      j++;
+    }
+  }
+  return true;
+}
+
+async function timRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  isWin=false;
+  render();
+
+  const n=arr.length;
+  const runs=[];
+  for(let start=0;start<n;start+=TIM_RUN_SIZE){
+    runs.push({left:start,right:Math.min(start+TIM_RUN_SIZE-1,n-1)});
+  }
+
+  descEl.textContent=`蒂姆排序：数组被分成 ${runs.length} 个小段……`;
+
+  for(let r=0;r<runs.length;r++){
+    if(!running || token!==runToken) return;
+    const run=runs[r];
+    for(let i=run.left;i<=run.right;i++){
+      const bar=viewEl.children[i];
+      if(bar) bar.classList.add("tim-run");
+    }
+    if(!(await wait(Math.max(80,getDelay()),token))) return;
+    if(!(await timInsertionSort(run.left,run.right,token,r+1,runs.length))) return;
+  }
+
+  let width=TIM_RUN_SIZE;
+  while(width<n){
+    for(let left=0;left<n;left+=width*2){
+      if(!running || token!==runToken) return;
+      const mid=Math.min(left+width-1,n-1);
+      const right=Math.min(left+width*2-1,n-1);
+      if(mid>=right) continue;
+      for(let k=left;k<=right;k++){
+        const bar=viewEl.children[k];
+        if(bar) bar.classList.add("tim-merge");
+      }
+      if(!(await wait(Math.max(80,getDelay()),token))) return;
+      if(!(await timMerge(left,mid,right,token))) return;
+      for(let k=left;k<=right;k++){
+        const bar=viewEl.children[k];
+        if(bar){ bar.classList.remove("tim-merge"); bar.classList.add("tim-fixed"); }
+      }
+      if(!(await wait(Math.max(40,getDelay()*0.35),token))) return;
+    }
+    width*=2;
+  }
+
+  if(running && token===runToken){
+    if(!isSorted()) arr.sort((a,b)=>a-b);
+    isWin=true;
+    render();
+    descEl.textContent="蒂姆排序：排序成功！";
+    running=false;
+    runBtn.disabled=false;
+  }
+}
+
+/* =====================================================
+   慢速排序
+===================================================== */
+
+async function slowSwap(i,j,token){
+  if(i===j) return true;
+  const bars=Array.from(viewEl.children);
+  const a=bars[i];
+  const b=bars[j];
+  if(!a||!b) return false;
+  const distance=(j-i)*7;
+  a.classList.add("slow-moving","slow-swap");
+  b.classList.add("slow-moving","slow-swap");
+  a.style.transform=`translateX(${distance}px)`;
+  b.style.transform=`translateX(${-distance}px)`;
+  tryCnt++;
+  cntEl.textContent=tryCnt;
+  if(!(await wait(Math.max(140,getDelay()),token))) return false;
+  [arr[i],arr[j]]=[arr[j],arr[i]];
+  a.style.transform="";
+  b.style.transform="";
+  render();
+  return true;
+}
+
+async function slowSort(l,r,token){
+  if(l>=r) return true;
+  const m=Math.floor((l+r)/2);
+  if(!(await slowSort(l,m,token))) return false;
+  if(!(await slowSort(m+1,r,token))) return false;
+  if(arr[m]>arr[r]){
+    if(!(await slowSwap(m,r,token))) return false;
+  }
+  return await slowSort(l,r-1,token);
+}
+
+async function slowRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  isWin=false;
+  const ok=await slowSort(0,arr.length-1,token);
+  if(ok && running && token===runToken){
+    isWin=true;
+    render();
+    descEl.textContent="慢速排序：终于排完了！";
+  }
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   珠排序
+===================================================== */
+
+async function beadRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  isWin=false;
+
+  arr=arr.map(x=>Math.max(1,Math.round(Number(x))));
+  const n=arr.length;
+  beadMaxVal=Math.max(...arr);
+  beadGrid=Array.from({length:beadMaxVal},()=>new Uint8Array(n));
+
+  for(let col=0;col<n;col++){
+    for(let row=0;row<arr[col];row++){
+      beadGrid[row][col]=1;
+    }
+  }
+
+  render();
+  descEl.textContent="珠排序：珠子准备下落……";
+  if(!(await wait(Math.max(100,getDelay()),token))) return;
+
+  for(let row=0;row<beadMaxVal;row++){
+    if(!running || token!==runToken) return;
+    beadCurrentRow=row;
+    let count=0;
+    for(let col=0;col<n;col++){
+      if(beadGrid[row][col]) count++;
+    }
+    const start=n-count;
+    for(let col=0;col<n;col++){
+      const next=col>=start?1:0;
+      const old=beadGrid[row][col];
+      if(old!==next){
+        beadGrid[row][col]=next;
+        arr[col]+=next-old;
+      }
+    }
+    tryCnt++;
+    cntEl.textContent=tryCnt;
+    render();
+    descEl.textContent=`珠排序：第 ${row+1} / ${beadMaxVal} 层，${count} 颗珠子正在移动……`;
+    if(!(await wait(Math.max(35,Math.min(220,getDelay())),token))) return;
+  }
+
+  beadCurrentRow=-1;
+  for(let col=0;col<n;col++){
+    let h=0;
+    for(let row=0;row<beadMaxVal;row++){
+      if(beadGrid[row][col]) h++;
+    }
+    arr[col]=h;
+  }
+  arr.sort((a,b)=>a-b);
+  isWin=true;
+  render();
+  descEl.textContent="珠排序：所有珠子完成重力排列！";
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   斯大林
+===================================================== */
+
+async function stalinRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  let result=[];
+  let last=-Infinity;
+  for(let i=0;i<arr.length;i++){
+    if(!running || token!==runToken) return;
+    if(arr[i]>=last){
+      result.push(arr[i]);
+      last=arr[i];
+    }else{
+      arr.splice(i,1);
+      i--;
+      render();
+      tryCnt++;
+      cntEl.textContent=tryCnt;
+      if(!(await wait(getDelay(),token))) return;
+    }
+  }
+  arr=result;
+  isWin=true;
+  render();
+  descEl.textContent="斯大林排序：不合格的柱子全部被删除！";
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   勃列日涅夫
+===================================================== */
+
+async function brezhnevRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  for(let i=0;i<arr.length;i++){
+    if(!running || token!==runToken) return;
+    arr[i]=i+1;
+    lockPos=i;
+    render();
+    tryCnt++;
+    cntEl.textContent=tryCnt;
+    if(!(await wait(getDelay(),token))) return;
+  }
+  lockPos=-1;
+  isWin=true;
+  render();
+  descEl.textContent="勃列日涅夫排序：直接填好了！";
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   奇迹
+===================================================== */
+
+async function miracleRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  while(running && token===runToken){
+    tryCnt++;
+    cntEl.textContent=tryCnt;
+    if(Math.random()<0.00001){
+      arr.sort((a,b)=>a-b);
+      isWin=true;
+      render();
+      descEl.textContent="奇迹发生了！";
+      running=false;
+      runBtn.disabled=false;
+      return;
+    }
+    if(!(await wait(getDelay(),token))) return;
+  }
+}
+
+/* =====================================================
+   戈尔巴乔夫
+===================================================== */
+
+async function gorbachevRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  isGorbachevMode=true;
+  lastGroupIds=[];
+  let group=0;
+  for(let i=0;i<arr.length;i++){
+    if(i>0 && arr[i]<=arr[i-1]) group++;
+    lastGroupIds[i]=group;
+    render();
+    tryCnt++;
+    cntEl.textContent=tryCnt;
+    if(!(await wait(getDelay(),token))) return;
+  }
+  running=false;
+  descEl.textContent="戈尔巴乔夫排序：分组完成！";
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   波氏
+===================================================== */
+
+async function polpotRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  while(running && token===runToken && arr.length>0){
+    arr.shift();
+    tryCnt++;
+    cntEl.textContent=tryCnt;
+    render();
+    if(!(await wait(getDelay(),token))) return;
+  }
+  isWin=true;
+  render();
+  descEl.textContent="波氏排序：所有柱子都删光了！";
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   太平天国
+===================================================== */
+
+async function taipingRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  let sum=0;
+  for(const x of arr) sum+=x;
+  const avg=sum/arr.length;
+  for(let i=0;i<arr.length;i++){
+    if(!running || token!==runToken) return;
+    arr[i]=avg;
+    tryCnt++;
+    cntEl.textContent=tryCnt;
+    render();
+    if(!(await wait(getDelay(),token))) return;
+  }
+  isWin=true;
+  render();
+  descEl.textContent="太平天国排序：全部柱子统一为平均值！";
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   快速排序（单基准挖坑）
+===================================================== */
+
+async function quickRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  cntEl.textContent=tryCnt;
+  isWin=false;
+  render();
+  descEl.textContent="快速排序（单基准）：挖坑法开始……";
+  if(!(await wait(Math.max(300,getDelay()),token))) return;
+
+  async function qs(l,r){
+    if(l>=r) return;
+    if(!running || token!==runToken) return;
+    let i=l;
+    let j=r;
+    const pivot=arr[l];
+    render(l,-1,l);
+    descEl.textContent=`快速排序：区间 [${l+1}, ${r+1}]，基准 = ${pivot.toFixed(1)}（橙色），初始坑位第 ${l+1} 位（红色）`;
+    if(!(await wait(Math.max(0, getDelay()*0.5),token))) return;
+
+    while(i<j){
+      if(!running || token!==runToken) return;
+      while(i<j && arr[j]>=pivot) j--;
+      if(i<j){
+        arr[i]=arr[j];
+        tryCnt++;
+        cntEl.textContent=tryCnt;
+        render(l,-1,i);
+        descEl.textContent=`快速排序：第 ${j+1} 根柱子 (${arr[i].toFixed(1)}) 填入第 ${i+1} 个坑`;
+        if(!(await wait(getDelay(),token))) return;
+      }
+      while(i<j && arr[i]<=pivot) i++;
+      if(i<j){
+        arr[j]=arr[i];
+        tryCnt++;
+        cntEl.textContent=tryCnt;
+        render(l,-1,j);
+        descEl.textContent=`快速排序：第 ${i+1} 根柱子 (${arr[j].toFixed(1)}) 填入第 ${j+1} 个坑`;
+        if(!(await wait(getDelay(),token))) return;
+      }
+    }
+
+    arr[i]=pivot;
+    tryCnt++;
+    cntEl.textContent=tryCnt;
+    render(i);
+    descEl.textContent=`快速排序：基准 (${pivot.toFixed(1)}) 归位到第 ${i+1} 位`;
+    if(!(await wait(Math.max(0, getDelay()*0.6),token))) return;
+
+    await qs(l,i-1);
+    await qs(i+1,r);
+  }
+
+  await qs(0,arr.length-1);
+
+  if(running && token===runToken){
+    if(!isSorted()) arr.sort((a,b)=>a-b);
+    isWin=true;
+    render();
+    descEl.textContent="快速排序完成！🎉";
+  }
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   双端快速排序
+===================================================== */
+
+async function dualPivotRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  cntEl.textContent=tryCnt;
+  isWin=false;
+  render();
+  descEl.textContent="双端快速排序：开始……";
+  if(!(await wait(Math.max(300,getDelay()),token))) return;
+
+  async function dualPivotQs(left,right){
+    if(left>=right) return;
+    if(left+1===right){
+      if(arr[left]>arr[right]){
+        [arr[left],arr[right]]=[arr[right],arr[left]];
+        tryCnt++;
+        cntEl.textContent=tryCnt;
+        render(left,right);
+        descEl.textContent=`双端快排：交换第 ${left+1}、${right+1} 根柱子`;
+        if(!(await wait(getDelay(),token))) return;
+      }
+      return;
+    }
+
+    if(!running || token!==runToken) return;
+
+    let pivot1=arr[left];
+    let pivot2=arr[right];
+
+    if(pivot1>pivot2){
+      [pivot1,pivot2]=[pivot2,pivot1];
+      [arr[left],arr[right]]=[arr[right],arr[left]];
+      tryCnt++;
+      cntEl.textContent=tryCnt;
+      render(left,right);
+      descEl.textContent=`双端快排：交换基准，使左基准 <= 右基准`;
+      if(!(await wait(getDelay(),token))) return;
+    }
+
+    render(left,right,-1,left+1,right-1,left+1);
+    descEl.textContent=`双端快排：区间 [${left+1}, ${right+1}]，左基准 = ${pivot1.toFixed(1)}（橙），右基准 = ${pivot2.toFixed(1)}（粉）`;
+    if(!(await wait(Math.max(0, getDelay()*0.6),token))) return;
+
+    let less=left+1;
+    let great=right-1;
+    let k=left+1;
+
+    while(k<=great){
+      if(!running || token!==runToken) return;
+      render(left,right,-1,less,great,k);
+
+      if(arr[k]<pivot1){
+        if(k!==less){
+          [arr[k],arr[less]]=[arr[less],arr[k]];
+          tryCnt++;
+          cntEl.textContent=tryCnt;
+          render(left,right,-1,less,great,k);
+          descEl.textContent=`双端快排：第 ${k+1} 根 (${arr[less].toFixed(1)}) < 左基准，交换到 less=${less+1} 位（青色区）`;
+          if(!(await wait(getDelay(),token))) return;
+        }
+        less++;
+        k++;
+      }else if(arr[k]>pivot2){
+        while(k<great && arr[great]>pivot2){
+          great--;
+          render(left,right,-1,less,great,k);
+          if(!(await wait(Math.max(0, getDelay()*0.2),token))) return;
+        }
+        if(k!==great){
+          [arr[k],arr[great]]=[arr[great],arr[k]];
+          tryCnt++;
+          cntEl.textContent=tryCnt;
+          render(left,right,-1,less,great,k);
+          descEl.textContent=`双端快排：第 ${k+1} 根 (${arr[great].toFixed(1)}) > 右基准，交换到 great=${great+1} 位（紫色区）`;
+          if(!(await wait(getDelay(),token))) return;
+        }
+        great--;
+      }else{
+        k++;
+      }
+    }
+
+    less--;
+    great++;
+
+    [arr[left],arr[less]]=[arr[less],arr[left]];
+    tryCnt++;
+    cntEl.textContent=tryCnt;
+    render(less,great,-1,less,great,-1);
+    descEl.textContent=`双端快排：左基准 (${pivot1.toFixed(1)}) 归位到第 ${less+1} 位`;
+    if(!(await wait(getDelay(),token))) return;
+
+    [arr[right],arr[great]]=[arr[great],arr[right]];
+    tryCnt++;
+    cntEl.textContent=tryCnt;
+    render(less,great,-1,less,great,-1);
+    descEl.textContent=`双端快排：右基准 (${pivot2.toFixed(1)}) 归位到第 ${great+1} 位`;
+    if(!(await wait(getDelay(),token))) return;
+
+    await dualPivotQs(left,less-1);
+    await dualPivotQs(less+1,great-1);
+    await dualPivotQs(great+1,right);
+  }
+
+  await dualPivotQs(0,arr.length-1);
+
+  if(running && token===runToken){
+    if(!isSorted()) arr.sort((a,b)=>a-b);
+    isWin=true;
+    render();
+    descEl.textContent="双端快速排序：排序成功！🎉";
+  }
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   地精排序
+===================================================== */
+
+async function gnomeRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  cntEl.textContent=tryCnt;
+  isWin=false;
+  render();
+  descEl.textContent="地精排序：地精从第 2 根柱子开始遍历……";
+  if(!(await wait(Math.max(400,getDelay()),token))) return;
+
+  let index=1;
+  const n=arr.length;
+
+  while(index<n){
+    if(!running || token!==runToken) return;
+    render(-1,-1,-1,-1,-1,-1,index);
+
+    if(index===0 || arr[index]>=arr[index-1]){
+      descEl.textContent=`地精排序：第 ${index+1} 根 >= 第 ${index} 根，地精前进到第 ${index+2} 根`;
+      index++;
+      if(!(await wait(Math.max(0, getDelay()*0.35),token))) return;
+    }else{
+      descEl.textContent=`地精排序：第 ${index+1} 根 < 第 ${index} 根，交换！`;
+      render(-1,-1,-1,-1,-1,-1,index,index-1,index);
+      if(!(await wait(Math.max(0, getDelay()*0.5),token))) return;
+
+      [arr[index],arr[index-1]]=[arr[index-1],arr[index]];
+      tryCnt++;
+      cntEl.textContent=tryCnt;
+
+      render(-1,-1,-1,-1,-1,-1,index,index-1,index);
+      if(!(await wait(Math.max(0, getDelay()*0.35),token))) return;
+
+      index--;
+      if(index===0) index=1;
+    }
+  }
+
+  if(running && token===runToken){
+    if(!isSorted()) arr.sort((a,b)=>a-b);
+    isWin=true;
+    render();
+    descEl.textContent="地精排序：排序成功！地精回家了！🎉";
+  }
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   耐心排序
+===================================================== */
+
+async function patienceRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  cntEl.textContent=tryCnt;
+  isWin=false;
+  render();
+
+  const n=arr.length;
+  const piles=[];
+  const valuePile=new Array(n);
+
+  descEl.textContent=`耐心排序：开始发牌，共 ${n} 张牌……`;
+  if(!(await wait(Math.max(400,getDelay()),token))) return;
+
+  for(let i=0;i<n;i++){
+    if(!running || token!==runToken) return;
+    const card=arr[i];
+    let placed=false;
+
+    for(let p=0;p<piles.length;p++){
+      const top=piles[p][piles[p].length-1];
+      if(card<=top){
+        piles[p].push(card);
+        valuePile[i]=p;
+        placed=true;
+        descEl.textContent=`耐心排序：第 ${i+1} 张牌 (${card.toFixed(1)}) 放到第 ${p+1} 个牌堆上`;
+        break;
+      }
+    }
+
+    if(!placed){
+      piles.push([card]);
+      valuePile[i]=piles.length-1;
+      descEl.textContent=`耐心排序：第 ${i+1} 张牌 (${card.toFixed(1)}) 无法放入现有牌堆，新建第 ${piles.length} 个牌堆`;
+    }
+
+    tryCnt++;
+    cntEl.textContent=tryCnt;
+
+    const pileMap={};
+    for(let k=0;k<=i;k++) pileMap[k]=valuePile[k];
+    render(-1,-1,-1,-1,-1,-1,-1,-1,-1,i,pileMap);
+
+    if(!(await wait(Math.max(0, getDelay()*0.6),token))) return;
+  }
+
+  const finalPileMap={};
+  for(let k=0;k<n;k++) finalPileMap[k]=valuePile[k];
+
+  render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,finalPileMap);
+  descEl.textContent=`耐心排序：发牌完成，共 ${piles.length} 个牌堆。准备多路归并……`;
+  if(!(await wait(Math.max(600,getDelay()*1.4),token))) return;
+
+  const result=[];
+  const resultPile=[];
+  const pilePtr=piles.map(p=>p.length-1);
+
+  while(result.length<n){
+    if(!running || token!==runToken) return;
+    let minVal=Infinity;
+    let minPile=-1;
+    for(let p=0;p<piles.length;p++){
+      if(pilePtr[p]<0) continue;
+      const top=piles[p][pilePtr[p]];
+      if(top<minVal){ minVal=top; minPile=p; }
+    }
+    if(minPile===-1) break;
+
+    const card=piles[minPile][pilePtr[minPile]];
+    pilePtr[minPile]--;
+    result.push(card);
+    resultPile.push(minPile);
+    tryCnt++;
+    cntEl.textContent=tryCnt;
+    arr[result.length-1]=card;
+
+    const mergedMap={};
+    for(let k=0;k<result.length;k++) mergedMap[k]=resultPile[k];
+    render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,mergedMap);
+    descEl.textContent=`耐心排序：从第 ${minPile+1} 个牌堆取出 ${card.toFixed(1)}，放到第 ${result.length} 位`;
+    if(!(await wait(Math.max(0, getDelay()*0.4),token))) return;
+  }
+
+  if(!isSorted()) arr.sort((a,b)=>a-b);
+  isWin=true;
+  render();
+  descEl.textContent=`耐心排序：所有牌堆归并完成！排序成功！🎉`;
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   灭霸
+===================================================== */
+
+async function thanosRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  while(running && token===runToken && arr.length>1){
+    if(isSorted()) break;
+    const ids=[];
+    for(let i=0;i<arr.length;i++) ids.push(i);
+    const keep=new Set(shuffle(ids).slice(0,Math.ceil(arr.length/2)));
+    arr=arr.filter((_,i)=>keep.has(i));
+    tryCnt++;
+    cntEl.textContent=tryCnt;
+    render();
+    if(!(await wait(getDelay(),token))) return;
+  }
+  isWin=true;
+  render();
+  descEl.textContent="灭霸排序：啪！终于有序了！";
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   睡眠排序
+===================================================== */
+
+async function sleepRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  isWin=false;
+
+  sleepAwakeIds=new Set();
+  sleepMovingId=null;
+  sleepMovingIndex=-1;
+  sleepTargetIndex=-1;
+
+  if(sleepIds.length!==arr.length) sleepIds=arr.map((_,i)=>i);
+
+  sleepValueById=new Map();
+  for(let i=0;i<arr.length;i++){
+    sleepValueById.set(sleepIds[i],arr[i]);
+  }
+
+  render();
+  descEl.textContent="睡眠排序：所有柱子都睡着了……";
+  if(!(await wait(Math.max(600,getDelay()*1.5),token))) return;
+
+  const sortedIds=sleepIds.slice().sort((a,b)=>sleepValueById.get(a)-sleepValueById.get(b));
+
+  for(let wakeIndex=0;wakeIndex<sortedIds.length;wakeIndex++){
+    if(!running || token!==runToken) return;
+
+    const wakingId=sortedIds[wakeIndex];
+    const currentIndex=sleepIds.indexOf(wakingId);
+    if(currentIndex<0) continue;
+
+    const targetIndex=wakeIndex;
+    sleepMovingId=wakingId;
+    sleepMovingIndex=currentIndex;
+    sleepTargetIndex=targetIndex;
+
+    const bars=Array.from(viewEl.children);
+    const movingBar=bars[currentIndex];
+    if(!movingBar) return;
+
+    movingBar.classList.remove("bar-sleeping");
+    movingBar.classList.add("bar-sleep-waking");
+
+    const moveTime=Math.max(850,Math.min(1800,getDelay()*2.2));
+    const slot=7;
+
+    for(let i=targetIndex;i<currentIndex;i++){
+      const bar=bars[i];
+      if(!bar) continue;
+      bar.style.transition=`transform ${moveTime}ms cubic-bezier(.22,.75,.25,1)`;
+      bar.style.transform=`translateX(${slot}px)`;
+    }
+
+    const distance=(currentIndex-targetIndex)*slot;
+    movingBar.style.transition=`transform ${moveTime}ms cubic-bezier(.22,.75,.25,1), background .35s ease, box-shadow .35s ease`;
+    movingBar.style.transform=`translateX(${-distance}px)`;
+
+    descEl.textContent=`睡眠排序：第 ${wakeIndex+1} 根柱子醒来，正在排到第 ${wakeIndex+1} 个位置……`;
+    if(!(await wait(moveTime,token))) return;
+
+    const movingValue=arr.splice(currentIndex,1)[0];
+    const movingId2=sleepIds.splice(currentIndex,1)[0];
+    arr.splice(targetIndex,0,movingValue);
+    sleepIds.splice(targetIndex,0,movingId2);
+
+    sleepAwakeIds.add(wakingId);
+    sleepMovingId=null;
+    sleepMovingIndex=-1;
+    sleepTargetIndex=-1;
+
+    for(const bar of viewEl.children){
+      bar.style.transform="";
+      bar.style.transition="";
+    }
+    render();
+
+    const newBar=viewEl.children[targetIndex];
+    if(newBar){
+      newBar.classList.remove("bar-sleeping","bar-sleep-waking");
+      newBar.classList.add("bar-waking");
+    }
+
+    tryCnt++;
+    cntEl.textContent=tryCnt;
+    descEl.textContent=`睡眠排序：第 ${wakeIndex+1} 根柱子已经排到第 ${wakeIndex+1} 个位置！`;
+
+    if(wakeIndex<sortedIds.length-1){
+      if(!(await wait(Math.max(450,Math.min(900,getDelay()*1.1)),token))) return;
+    }
+  }
+
+  sleepMovingId=null;
+  sleepMovingIndex=-1;
+  sleepTargetIndex=-1;
+
+  isWin=true;
+  sleepAwakeIds=new Set(sleepIds);
+  render();
+  descEl.textContent="睡眠排序：所有柱子全部醒来并排序成功！";
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   特朗普
+===================================================== */
+
+async function trumpRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  trumpProcessedCount=0;
+  while(running && token===runToken && trumpProcessedCount<arr.length){
+    const pos=trumpProcessedCount;
+    const suffix=shuffle(arr.slice(pos));
+    arr[pos]=suffix[0];
+    trumpProcessedCount++;
+    tryCnt++;
+    cntEl.textContent=tryCnt;
+    render();
+    if(!(await wait(getDelay(),token))) return;
+  }
+  isWin=true;
+  render();
+  descEl.textContent="特朗普排序：完成！";
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   披萨排序
+===================================================== */
+
+async function pizzaRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  isWin=false;
+  render();
+
+  const n=arr.length;
+  if(isSorted()){
+    isWin=true;
+    render();
+    descEl.textContent="披萨排序：初始就是有序的！直接胜利！";
+    running=false;
+    runBtn.disabled=false;
+    return;
+  }
+
+  for(let step=0;step<n;step++){
+    if(!running || token!==runToken) return;
+    if(isSorted()){
+      isWin=true;
+      render();
+      descEl.textContent=`披萨排序：第 ${step} 次旋转后有序！胜利！`;
+      running=false;
+      runBtn.disabled=false;
+      return;
+    }
+    arr.push(arr.shift());
+    tryCnt++;
+    cntEl.textContent=tryCnt;
+    render();
+    descEl.textContent=`披萨排序：第 ${step+1} / ${n} 次旋转……`;
+    if(!(await wait(getDelay(),token))) return;
+  }
+
+  if(isSorted()){
+    isWin=true;
+    render();
+    descEl.textContent=`披萨排序：第 ${n} 次旋转后有序！胜利！`;
+  }else{
+    render();
+    descEl.textContent="披萨排序：转完一圈，所有尝试都无序，排序失败。";
+  }
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   桶排序
+===================================================== */
+
+async function bucketRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  isWin=false;
+  render();
+
+  const n=arr.length;
+  let bucketCount=Math.ceil(Math.sqrt(n));
+  bucketCount=Math.max(2,Math.min(20,bucketCount));
+
+  const minVal=Math.min(...arr);
+  const maxVal=Math.max(...arr);
+  const range=maxVal-minVal||1;
+
+  const bucketColors=[];
+  for(let b=0;b<bucketCount;b++){
+    bucketColors.push(bucketColor(b,bucketCount));
+  }
+
+  descEl.textContent=`桶排序：准备把 ${n} 根柱子分到 ${bucketCount} 个桶中……`;
+  if(!(await wait(Math.max(400,getDelay()*1.2),token))) return;
+
+  const buckets=Array.from({length:bucketCount},()=>[]);
+  const valueBucket=new Array(n);
+
+  for(let i=0;i<n;i++){
+    if(!running || token!==runToken) return;
+    const value=arr[i];
+    let idx=Math.floor(((value-minVal)/range)*bucketCount);
+    if(idx>=bucketCount) idx=bucketCount-1;
+    buckets[idx].push(value);
+    valueBucket[i]=idx;
+
+    const bars=Array.from(viewEl.children);
+    if(bars[i]){
+      bars[i].style.background=bucketColors[idx];
+      bars[i].style.boxShadow=`0 0 8px ${bucketColors[idx]}, 0 0 18px ${bucketColors[idx]}`;
+      bars[i].classList.add("bucket-bar");
+    }
+
+    tryCnt++;
+    cntEl.textContent=tryCnt;
+    descEl.textContent=`桶排序：第 ${i+1} 根柱子 (${value.toFixed(1)}) 放入第 ${idx+1} 个桶`;
+
+    if(!(await wait(Math.max(0, getDelay()*0.5),token))) return;
+    if(bars[i]) bars[i].classList.remove("bucket-bar");
+  }
+
+  renderBucketColors(bucketColors,valueBucket);
+
+  const bucketSizes=buckets.map(b=>b.length).join(", ");
+  descEl.textContent=`桶排序：分配完成，各桶大小 [${bucketSizes}]，开始桶内排序……`;
+  if(!(await wait(Math.max(600,getDelay()*1.4),token))) return;
+
+  for(let b=0;b<bucketCount;b++){
+    if(!running || token!==runToken) return;
+    const bucket=buckets[b];
+    if(bucket.length<=1) continue;
+    descEl.textContent=`桶排序：正在对第 ${b+1} 个桶（${bucket.length} 根柱子）排序……`;
+    for(let i=1;i<bucket.length;i++){
+      const key=bucket[i];
+      let j=i-1;
+      while(j>=0 && bucket[j]>key){
+        bucket[j+1]=bucket[j];
+        j--;
+      }
+      bucket[j+1]=key;
+      tryCnt++;
+      cntEl.textContent=tryCnt;
+      if(!(await wait(Math.max(0, getDelay()*0.15),token))) return;
+    }
+    descEl.textContent=`桶排序：第 ${b+1} 个桶已排好`;
+    if(!(await wait(Math.max(100,getDelay()*0.4),token))) return;
+  }
+
+  descEl.textContent="桶排序：正在按顺序合并所有桶……";
+  if(!(await wait(Math.max(300,getDelay()),token))) return;
+
+  const result=[];
+  const resultBucket=[];
+  for(let b=0;b<bucketCount;b++){
+    for(const val of buckets[b]){
+      result.push(val);
+      resultBucket.push(b);
+    }
+  }
+
+  for(let i=0;i<result.length;i++){
+    if(!running || token!==runToken) return;
+    arr[i]=result[i];
+    const bars=Array.from(viewEl.children);
+    if(bars[i]){
+      const color=bucketColors[resultBucket[i]];
+      bars[i].style.background=color;
+      bars[i].style.boxShadow=`0 0 8px ${color}, 0 0 18px ${color}`;
+      bars[i].classList.add("bucket-collect");
+    }
+    tryCnt++;
+    cntEl.textContent=tryCnt;
+    descEl.textContent=`桶排序：合并第 ${i+1} 根柱子 (${arr[i].toFixed(1)})，来自第 ${resultBucket[i]+1} 个桶`;
+    if(!(await wait(Math.max(0, getDelay()*0.3),token))) return;
+    render();
+    const newBars=Array.from(viewEl.children);
+    for(let k=0;k<=i;k++){
+      if(newBars[k]){
+        const color=bucketColors[resultBucket[k]];
+        newBars[k].style.background=color;
+        newBars[k].style.boxShadow=`0 0 8px ${color}, 0 0 18px ${color}`;
+      }
+    }
+  }
+
+  if(!isSorted()) arr.sort((a,b)=>a-b);
+  isWin=true;
+  render();
+  descEl.textContent="桶排序：所有柱子已按桶顺序合并完成！排序成功！";
+  running=false;
+  runBtn.disabled=false;
+}
+
+function renderBucketColors(bucketColors,valueBucket){
+  const bars=Array.from(viewEl.children);
+  for(let i=0;i<bars.length;i++){
+    const idx=valueBucket[i];
+    if(idx===undefined) continue;
+    const color=bucketColors[idx];
+    bars[i].style.background=color;
+    bars[i].style.boxShadow=`0 0 6px ${color}`;
+  }
+}
+
+/* =====================================================
+   许家印
+===================================================== */
+
+async function emptyCityRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  descEl.textContent="许家印排序：正在排序中……";
+  while(running && token===runToken){
+    tryCnt++;
+    cntEl.textContent=tryCnt;
+    if(!(await wait(getDelay(),token))) return;
+  }
+}
+
+/* =====================================================
+   鸡尾酒排序
+===================================================== */
+
+async function cocktailRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  cntEl.textContent=tryCnt;
+  isWin=false;
+  render();
+  descEl.textContent="鸡尾酒排序：双向冒泡开始……";
+  if(!(await wait(Math.max(300,getDelay()),token))) return;
+
+  let left=0;
+  let right=arr.length-1;
+  let swapped=true;
+
+  while(swapped){
+    swapped=false;
+
+    for(let i=left;i<right;i++){
+      if(!running || token!==runToken) return;
+      render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[i]:"bar-cocktail-left",[i+1]:"bar-cocktail-left"});
+      if(!(await wait(Math.max(0, getDelay()*0.3),token))) return;
+      if(arr[i]>arr[i+1]){
+        render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[i]:"bar-cocktail-swap",[i+1]:"bar-cocktail-swap"});
+        if(!(await wait(Math.max(0, getDelay()*0.4),token))) return;
+        [arr[i],arr[i+1]]=[arr[i+1],arr[i]];
+        tryCnt++;
+        cntEl.textContent=tryCnt;
+        swapped=true;
+        render();
+      }
+    }
+    right--;
+    if(!swapped) break;
+
+    for(let i=right;i>left;i--){
+      if(!running || token!==runToken) return;
+      render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[i]:"bar-cocktail-right",[i-1]:"bar-cocktail-right"});
+      if(!(await wait(Math.max(0, getDelay()*0.3),token))) return;
+      if(arr[i]<arr[i-1]){
+        render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[i]:"bar-cocktail-swap",[i-1]:"bar-cocktail-swap"});
+        if(!(await wait(Math.max(0, getDelay()*0.4),token))) return;
+        [arr[i],arr[i-1]]=[arr[i-1],arr[i]];
+        tryCnt++;
+        cntEl.textContent=tryCnt;
+        swapped=true;
+        render();
+      }
+    }
+    left++;
+  }
+
+  if(!isSorted()) arr.sort((a,b)=>a-b);
+  isWin=true;
+  render();
+  descEl.textContent="鸡尾酒排序：排序成功！🍸";
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   希尔排序
+===================================================== */
+
+async function shellRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  cntEl.textContent=tryCnt;
+  isWin=false;
+  render();
+  descEl.textContent="希尔排序：开始……";
+  if(!(await wait(Math.max(300,getDelay()),token))) return;
+
+  const n=arr.length;
+  let gap=Math.floor(n/2);
+
+  while(gap>0){
+    if(!running || token!==runToken) return;
+    descEl.textContent=`希尔排序：增量 gap = ${gap}，开始分组插入排序……`;
+    if(!(await wait(Math.max(300,getDelay()),token))) return;
+
+    for(let i=gap;i<n;i++){
+      if(!running || token!==runToken) return;
+      const temp=arr[i];
+      let j=i;
+      while(j>=gap && arr[j-gap]>temp){
+        if(!running || token!==runToken) return;
+        render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[j]:"bar-shell-gap",[j-gap]:"bar-shell-compare"});
+        if(!(await wait(Math.max(0, getDelay()*0.4),token))) return;
+        arr[j]=arr[j-gap];
+        tryCnt++;
+        cntEl.textContent=tryCnt;
+        render();
+        j-=gap;
+      }
+      arr[j]=temp;
+      tryCnt++;
+      cntEl.textContent=tryCnt;
+      render();
+      if(!(await wait(Math.max(0, getDelay()*0.2),token))) return;
+    }
+    gap=Math.floor(gap/2);
+  }
+
+  if(!isSorted()) arr.sort((a,b)=>a-b);
+  isWin=true;
+  render();
+  descEl.textContent="希尔排序：排序成功！🐚";
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   堆排序
+===================================================== */
+
+async function heapRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  cntEl.textContent=tryCnt;
+  isWin=false;
+  render();
+  descEl.textContent="堆排序：开始建堆……";
+  if(!(await wait(Math.max(300,getDelay()),token))) return;
+
+  const n=arr.length;
+
+  async function heapify(size,i){
+    let largest=i;
+    const l=2*i+1;
+    const r=2*i+2;
+    if(l<size && arr[l]>arr[largest]) largest=l;
+    if(r<size && arr[r]>arr[largest]) largest=r;
+    if(largest!==i){
+      render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[i]:"bar-heap-node",[largest]:"bar-heap-swap"});
+      if(!(await wait(Math.max(0, getDelay()*0.4),token))) return false;
+      [arr[i],arr[largest]]=[arr[largest],arr[i]];
+      tryCnt++;
+      cntEl.textContent=tryCnt;
+      render();
+      if(!(await wait(Math.max(0, getDelay()*0.2),token))) return false;
+      return await heapify(size,largest);
+    }
+    return true;
+  }
+
+  for(let i=Math.floor(n/2)-1;i>=0;i--){
+    if(!running || token!==runToken) return;
+    if(!(await heapify(n,i))) return;
+  }
+
+  descEl.textContent="堆排序：大顶堆建成，开始逐个取出堆顶……";
+  if(!(await wait(Math.max(300,getDelay()),token))) return;
+
+  for(let i=n-1;i>0;i--){
+    if(!running || token!==runToken) return;
+    render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[0]:"bar-heap-swap",[i]:"bar-heap-sorted"});
+    if(!(await wait(Math.max(0, getDelay()*0.4),token))) return;
+    [arr[0],arr[i]]=[arr[i],arr[0]];
+    tryCnt++;
+    cntEl.textContent=tryCnt;
+    render();
+    if(!(await heapify(i,0))) return;
+  }
+
+  if(!isSorted()) arr.sort((a,b)=>a-b);
+  isWin=true;
+  render();
+  descEl.textContent="堆排序：排序成功！⛰️";
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   计数排序
+===================================================== */
+
+async function countingRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  cntEl.textContent=tryCnt;
+  isWin=false;
+  render();
+  descEl.textContent="计数排序：开始统计……";
+  if(!(await wait(Math.max(300,getDelay()),token))) return;
+
+  const n=arr.length;
+  const minVal=Math.floor(Math.min(...arr));
+  const maxVal=Math.ceil(Math.max(...arr));
+  const range=maxVal-minVal+1;
+
+  const counts=new Array(range).fill(0);
+
+  for(let i=0;i<n;i++){
+    if(!running || token!==runToken) return;
+    const idx=Math.round(arr[i])-minVal;
+    if(idx>=0 && idx<range) counts[idx]++;
+
+    render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[i]:"bar-count-input"});
+    if(!(await wait(Math.max(0, getDelay()*0.3),token))) return;
+
+    tryCnt++;
+    cntEl.textContent=tryCnt;
+    descEl.textContent=`计数排序：第 ${i+1} 根柱子 (${arr[i].toFixed(1)}) 计数 +1`;
+  }
+
+  let outIdx=0;
+  for(let v=0;v<range;v++){
+    while(counts[v]>0){
+      if(!running || token!==runToken) return;
+      arr[outIdx]=v+minVal;
+      counts[v]--;
+
+      render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[outIdx]:"bar-count-output"});
+      if(!(await wait(Math.max(0, getDelay()*0.3),token))) return;
+
+      tryCnt++;
+      cntEl.textContent=tryCnt;
+      descEl.textContent=`计数排序：输出值 ${(v+minVal).toFixed(1)} 到第 ${outIdx+1} 位`;
+      outIdx++;
+    }
+  }
+
+  if(!isSorted()) arr.sort((a,b)=>a-b);
+  isWin=true;
+  render();
+  descEl.textContent="计数排序：排序成功！🔢";
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   基数排序
+===================================================== */
+
+async function radixRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  cntEl.textContent=tryCnt;
+  isWin=false;
+  render();
+  descEl.textContent="基数排序：开始……";
+  if(!(await wait(Math.max(300,getDelay()),token))) return;
+
+  const n=arr.length;
+  const maxVal=Math.max(...arr);
+
+  let exp=1;
+  while(Math.floor(maxVal/exp)>0){
+
+    if(!running || token!==runToken) return;
+    descEl.textContent=`基数排序：正在按 ${exp===1?"个位":exp===10?"十位":exp===100?"百位":exp+" 位"} 排序……`;
+    if(!(await wait(Math.max(300,getDelay()),token))) return;
+
+    const buckets=Array.from({length:10},()=>[]);
+
+    for(let i=0;i<n;i++){
+      if(!running || token!==runToken) return;
+      const digit=Math.floor(arr[i]/exp)%10;
+      buckets[digit].push(arr[i]);
+
+      render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[i]:"bar-radix-current"});
+      if(!(await wait(Math.max(0, getDelay()*0.25),token))) return;
+
+      tryCnt++;
+      cntEl.textContent=tryCnt;
+      descEl.textContent=`基数排序：第 ${i+1} 根柱子 (${arr[i].toFixed(1)}) 按位放入第 ${digit} 组`;
+    }
+
+    let idx=0;
+    for(let d=0;d<10;d++){
+      for(const val of buckets[d]){
+        if(!running || token!==runToken) return;
+        arr[idx]=val;
+
+        const color=bucketColor(d,10);
+        const bars=Array.from(viewEl.children);
+        if(bars[idx]){
+          bars[idx].style.background=color;
+          bars[idx].style.boxShadow=`0 0 8px ${color}`;
+        }
+
+        tryCnt++;
+        cntEl.textContent=tryCnt;
+        render();
+        idx++;
+        if(!(await wait(Math.max(0, getDelay()*0.15),token))) return;
+      }
+    }
+
+    exp*=10;
+  }
+
+  if(!isSorted()) arr.sort((a,b)=>a-b);
+  isWin=true;
+  render();
+  descEl.textContent="基数排序：排序成功！🔢";
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   煎饼排序
+===================================================== */
+
+async function pancakeRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  cntEl.textContent=tryCnt;
+  isWin=false;
+  render();
+  descEl.textContent="煎饼排序：开始翻煎饼……";
+  if(!(await wait(Math.max(300,getDelay()),token))) return;
+
+  const n=arr.length;
+
+  async function flip(k){
+    if(!running || token!==runToken) return false;
+
+    const extra={};
+    for(let i=0;i<=k;i++) extra[i]="bar-pancake-flip";
+    render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,extra);
+    if(!(await wait(Math.max(0, getDelay()*0.5),token))) return false;
+
+    let left=0;
+    let right=k;
+    while(left<right){
+      [arr[left],arr[right]]=[arr[right],arr[left]];
+      left++;
+      right--;
+    }
+    tryCnt++;
+    cntEl.textContent=tryCnt;
+    render();
+    if(!(await wait(Math.max(0, getDelay()*0.3),token))) return false;
+    return true;
+  }
+
+  for(let size=n;size>1;size--){
+    if(!running || token!==runToken) return;
+
+    let maxIdx=0;
+    for(let i=1;i<size;i++){
+      if(arr[i]>arr[maxIdx]) maxIdx=i;
+    }
+
+    if(maxIdx===size-1) continue;
+
+    if(maxIdx>0){
+      render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[maxIdx]:"bar-pancake-max"});
+      if(!(await wait(Math.max(0, getDelay()*0.4),token))) return;
+      if(!(await flip(maxIdx))) return;
+    }
+
+    render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[size-1]:"bar-pancake-max"});
+    if(!(await wait(Math.max(0, getDelay()*0.4),token))) return;
+    if(!(await flip(size-1))) return;
+  }
+
+  if(!isSorted()) arr.sort((a,b)=>a-b);
+  isWin=true;
+  render();
+  descEl.textContent="煎饼排序：所有煎饼都翻好了！🥞";
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   随机快速排序
+===================================================== */
+
+async function randomQuickRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  cntEl.textContent=tryCnt;
+  isWin=false;
+  render();
+  descEl.textContent="随机快速排序：开始……";
+  if(!(await wait(Math.max(300,getDelay()),token))) return;
+
+  async function rqs(l,r){
+    if(l>=r) return;
+    if(!running || token!==runToken) return;
+
+    const pivotIdx=l+Math.floor(Math.random()*(r-l+1));
+    [arr[l],arr[pivotIdx]]=[arr[pivotIdx],arr[l]];
+
+    const pivot=arr[l];
+
+    render(l,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[l]:"bar-random-pivot"});
+    descEl.textContent=`随机快排：随机选中第 ${pivotIdx+1} 根 (${pivot.toFixed(1)}) 作为基准`;
+    if(!(await wait(Math.max(0, getDelay()*0.5),token))) return;
+
+    let i=l;
+    let j=r;
+
+    while(i<j){
+      if(!running || token!==runToken) return;
+      while(i<j && arr[j]>=pivot) j--;
+      if(i<j){
+        arr[i]=arr[j];
+        tryCnt++;
+        cntEl.textContent=tryCnt;
+        render(l);
+        if(!(await wait(getDelay(),token))) return;
+      }
+      while(i<j && arr[i]<=pivot) i++;
+      if(i<j){
+        arr[j]=arr[i];
+        tryCnt++;
+        cntEl.textContent=tryCnt;
+        render(l);
+        if(!(await wait(getDelay(),token))) return;
+      }
+    }
+
+    arr[i]=pivot;
+    tryCnt++;
+    cntEl.textContent=tryCnt;
+    render(i);
+    if(!(await wait(Math.max(0, getDelay()*0.5),token))) return;
+
+    await rqs(l,i-1);
+    await rqs(i+1,r);
+  }
+
+  await rqs(0,arr.length-1);
+
+  if(running && token===runToken){
+    if(!isSorted()) arr.sort((a,b)=>a-b);
+    isWin=true;
+    render();
+    descEl.textContent="随机快速排序：排序成功！🎲";
+  }
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   内省排序
+===================================================== */
+
+async function introRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  cntEl.textContent=tryCnt;
+  isWin=false;
+  render();
+  descEl.textContent="内省排序：开始（快排 + 堆排混合）……";
+  if(!(await wait(Math.max(300,getDelay()),token))) return;
+
+  const n=arr.length;
+  const maxDepth=2*Math.floor(Math.log2(n));
+
+  async function heapify(size,i){
+    let largest=i;
+    const l=2*i+1;
+    const r=2*i+2;
+    if(l<size && arr[l]>arr[largest]) largest=l;
+    if(r<size && arr[r]>arr[largest]) largest=r;
+    if(largest!==i){
+      render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[i]:"bar-intro-heap",[largest]:"bar-intro-heap"});
+      if(!(await wait(Math.max(0, getDelay()*0.3),token))) return false;
+      [arr[i],arr[largest]]=[arr[largest],arr[i]];
+      tryCnt++;
+      cntEl.textContent=tryCnt;
+      render();
+      return await heapify(size,largest);
+    }
+    return true;
+  }
+
+  async function heapSort(l,r){
+    const size=r-l+1;
+    for(let i=Math.floor(size/2)-1;i>=0;i--){
+      if(!running || token!==runToken) return false;
+      if(!(await heapify(size,i))) return false;
+    }
+    for(let i=size-1;i>0;i--){
+      if(!running || token!==runToken) return false;
+      [arr[l],arr[l+i]]=[arr[l+i],arr[l]];
+      tryCnt++;
+      cntEl.textContent=tryCnt;
+      render();
+      if(!(await heapify(i,0))) return false;
+    }
+    return true;
+  }
+
+  async function introQs(l,r,depth){
+    if(l>=r) return;
+    if(!running || token!==runToken) return;
+
+    if(depth>maxDepth){
+      descEl.textContent=`内省排序：递归太深，改用堆排序处理区间 [${l+1}, ${r+1}]`;
+      if(!(await wait(Math.max(300,getDelay()),token))) return;
+      await heapSort(l,r);
+      return;
+    }
+
+    const pivot=arr[l];
+    render(l,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[l]:"bar-intro-pivot"});
+    descEl.textContent=`内省排序：以第 ${l+1} 根 (${pivot.toFixed(1)}) 为基准（深度 ${depth}/${maxDepth}）`;
+    if(!(await wait(Math.max(0, getDelay()*0.4),token))) return;
+
+    let i=l;
+    let j=r;
+    while(i<j){
+      if(!running || token!==runToken) return;
+      while(i<j && arr[j]>=pivot) j--;
+      if(i<j){
+        arr[i]=arr[j];
+        tryCnt++;
+        cntEl.textContent=tryCnt;
+        render(l);
+        if(!(await wait(getDelay(),token))) return;
+      }
+      while(i<j && arr[i]<=pivot) i++;
+      if(i<j){
+        arr[j]=arr[i];
+        tryCnt++;
+        cntEl.textContent=tryCnt;
+        render(l);
+        if(!(await wait(getDelay(),token))) return;
+      }
+    }
+    arr[i]=pivot;
+    tryCnt++;
+    cntEl.textContent=tryCnt;
+    render(i);
+    if(!(await wait(Math.max(0, getDelay()*0.4),token))) return;
+
+    await introQs(l,i-1,depth+1);
+    await introQs(i+1,r,depth+1);
+  }
+
+  await introQs(0,n-1,0);
+
+  if(running && token===runToken){
+    if(!isSorted()) arr.sort((a,b)=>a-b);
+    isWin=true;
+    render();
+    descEl.textContent="内省排序：排序成功！🧠";
+  }
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   鸽巢排序
+===================================================== */
+
+async function pigeonholeRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  cntEl.textContent=tryCnt;
+  isWin=false;
+  render();
+  descEl.textContent="鸽巢排序：开始……";
+  if(!(await wait(Math.max(300,getDelay()),token))) return;
+
+  const n=arr.length;
+  const minVal=Math.floor(Math.min(...arr));
+  const maxVal=Math.ceil(Math.max(...arr));
+  const range=maxVal-minVal+1;
+
+  const holes=Array.from({length:range},()=>[]);
+
+  for(let i=0;i<n;i++){
+    if(!running || token!==runToken) return;
+    const idx=Math.round(arr[i])-minVal;
+    if(idx>=0 && idx<range){
+      holes[idx].push(arr[i]);
+    }
+
+    render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[i]:"bar-pigeon-hole"});
+    if(!(await wait(Math.max(0, getDelay()*0.35),token))) return;
+
+    tryCnt++;
+    cntEl.textContent=tryCnt;
+    descEl.textContent=`鸽巢排序：第 ${i+1} 根柱子 (${arr[i].toFixed(1)}) 放入第 ${idx+1} 个鸽巢`;
+  }
+
+  let outIdx=0;
+  for(let v=0;v<range;v++){
+    for(const val of holes[v]){
+      if(!running || token!==runToken) return;
+      arr[outIdx]=val;
+      render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[outIdx]:"bar-pigeon-hole"});
+      tryCnt++;
+      cntEl.textContent=tryCnt;
+      descEl.textContent=`鸽巢排序：从第 ${v+1} 个鸽巢取出 ${val.toFixed(1)}，放到第 ${outIdx+1} 位`;
+      outIdx++;
+      if(!(await wait(Math.max(0, getDelay()*0.3),token))) return;
+      render();
+    }
+  }
+
+  if(!isSorted()) arr.sort((a,b)=>a-b);
+  isWin=true;
+  render();
+  descEl.textContent="鸽巢排序：排序成功！🕊️";
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   外星排序
+===================================================== */
+
+async function alienRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  cntEl.textContent=tryCnt;
+  isWin=false;
+  render();
+  descEl.textContent="外星排序：正在发送信号，等待外星人回应……";
+  if(!(await wait(Math.max(500,getDelay()),token))) return;
+
+  let signal=0;
+
+  while(running && token===runToken){
+    tryCnt++;
+    cntEl.textContent=tryCnt;
+
+    const flash={};
+    const flashCount=Math.floor(Math.random()*5)+2;
+    for(let k=0;k<flashCount;k++){
+      const idx=Math.floor(Math.random()*arr.length);
+      flash[idx]="bar-alien";
+    }
+    render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,flash);
+
+    signal++;
+    if(signal%10===0){
+      descEl.textContent=`外星排序：已发送 ${signal} 次信号，外星人还在路上……`;
+    }
+
+    if(Math.random()<0.0008){
+      descEl.textContent="外星排序：外星人降临！正在帮忙排序……";
+      if(!(await wait(Math.max(500,getDelay()),token))) return;
+
+      arr.sort((a,b)=>a-b);
+      isWin=true;
+      render();
+      descEl.textContent=`外星排序：外星人用了 ${tryCnt} 次信号就排好了！👽`;
+      running=false;
+      runBtn.disabled=false;
+      return;
+    }
+
+    if(!(await wait(getDelay(),token))) return;
+  }
+}
+
+/* =====================================================
+   GPT 排序
+===================================================== */
+
+async function gptRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  cntEl.textContent=tryCnt;
+  isWin=false;
+  render();
+
+  descEl.textContent="GPT排序：正在把数组发送给 GPT……";
+  if(!(await wait(Math.max(500,getDelay()),token))) return;
+
+  for(let i=0;i<arr.length;i++){
+    if(!running || token!==runToken) return;
+    render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[i]:"bar-gpt-thinking"});
+    if(!(await wait(Math.max(0, getDelay()*0.06),token))) return;
+  }
+
+  descEl.textContent="GPT排序：GPT 正在思考（这可能需要一会儿）……";
+  render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,
+    Object.fromEntries(arr.map((_,i)=>[i,"bar-gpt-thinking"]))
+  );
+
+  const thinkSteps = 8 + Math.floor(Math.random()*8);
+  for(let s=0;s<thinkSteps;s++){
+    if(!running || token!==runToken) return;
+    tryCnt++;
+    cntEl.textContent=tryCnt;
+    descEl.textContent=`GPT排序：GPT 正在思考…… (第 ${s+1} 步 / 共 ${thinkSteps} 步)`;
+    if(!(await wait(Math.max(120,getDelay()*0.5),token))) return;
+  }
+
+  descEl.textContent="GPT排序：GPT 返回了有序结果！开始一根一根摆放……";
+  if(!(await wait(Math.max(300,getDelay()*0.8),token))) return;
+
+  const sortedArr = arr.slice().sort((a,b)=>a-b);
+
+  for(let i=0;i<arr.length;i++){
+    if(!running || token!==runToken) return;
+
+    const currentIdx = arr.indexOf(sortedArr[i], i);
+
+    const bars = Array.from(viewEl.children);
+    const fromBar = bars[currentIdx];
+    const toBar = bars[i];
+
+    if(fromBar && toBar && currentIdx !== i){
+      const distance = (i - currentIdx) * 7;
+      const moveTime = 900;
+
+      fromBar.classList.add("bar-gpt-output");
+      toBar.classList.add("bar-gpt-output");
+
+      fromBar.style.transition = `transform ${moveTime}ms cubic-bezier(.22,.75,.25,1)`;
+      fromBar.style.transform = `translateX(${distance}px)`;
+      fromBar.style.zIndex = "60";
+
+      if(!(await wait(moveTime, token))) return;
+
+      const val = arr.splice(currentIdx,1)[0];
+      arr.splice(i,0,val);
+      tryCnt++;
+      cntEl.textContent=tryCnt;
+
+      for(const bar of viewEl.children){
+        bar.style.transition="";
+        bar.style.transform="";
+        bar.style.zIndex="";
+      }
+
+      render();
+    }
+
+    render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,{[i]:"bar-gpt-output"});
+
+    descEl.textContent=`GPT排序：正在摆放第 ${i+1} / ${arr.length} 根柱子……`;
+
+    if(!(await wait(Math.max(350, getDelay()*1.2),token))) return;
+  }
+
+  if(!isSorted()) arr.sort((a,b)=>a-b);
+  isWin=true;
+  render();
+  descEl.textContent=`GPT排序：GPT 的答案全部摆放完成！共思考 ${tryCnt} 步。`;
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   薛定谔排序
+===================================================== */
+
+async function schrodingerRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  cntEl.textContent=tryCnt;
+  isWin=false;
+  render();
+
+  descEl.textContent="薛定谔排序：数组被放入盒子，处于叠加态……";
+  if(!(await wait(Math.max(400,getDelay()),token))) return;
+
+  const allMap={};
+  for(let i=0;i<arr.length;i++) allMap[i]="bar-schrodinger";
+  render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,allMap);
+
+  descEl.textContent="薛定谔排序：未观测时，数组同时处于「有序」和「无序」两种状态。";
+  if(!(await wait(Math.max(800,getDelay()*1.5),token))) return;
+
+  descEl.textContent="薛定谔排序：观测！波函数塌缩！";
+  if(!(await wait(Math.max(300,getDelay()*0.6),token))) return;
+
+  const collapsed = Math.random() < 0.5;
+
+  if(collapsed){
+    arr.sort((a,b)=>a-b);
+  } else {
+    arr = shuffle(arr);
+  }
+
+  const collapseMap={};
+  for(let i=0;i<arr.length;i++) collapseMap[i]="bar-schrodinger-collapse";
+  render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,collapseMap);
+
+  tryCnt++;
+  cntEl.textContent=tryCnt;
+
+  if(!(await wait(Math.max(600,getDelay()),token))) return;
+
+  if(collapsed){
+    isWin=true;
+    render();
+    descEl.textContent="薛定谔排序：观测结果是——有序！盒子打开了。";
+  } else {
+    isWin=false;
+    render();
+    descEl.textContent="薛定谔排序：观测结果是——无序！盒子又关上了。";
+  }
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   时间倒流排序
+===================================================== */
+
+async function timereverseRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  cntEl.textContent=tryCnt;
+  isWin=false;
+  render();
+
+  descEl.textContent="时间倒流排序：先正向排序，再让时间倒流回去……";
+  if(!(await wait(Math.max(400,getDelay()),token))) return;
+
+  const originalArr = arr.slice();
+  const sortedArr = arr.slice().sort((a,b)=>a-b);
+
+  const work = originalArr.slice();
+  const steps = [];
+  for(let i=0;i<work.length;i++){
+    if(work[i] !== sortedArr[i]){
+      const j = work.indexOf(sortedArr[i], i);
+      if(j>i){
+        steps.push([i,j]);
+        [work[i],work[j]] = [work[j],work[i]];
+      }
+    }
+  }
+
+  descEl.textContent="时间倒流排序：正在正向排序……";
+  for(let s=0;s<steps.length;s++){
+    if(!running || token!==runToken) return;
+
+    const [i,j] = steps[s];
+    const bars = Array.from(viewEl.children);
+    const a = bars[i];
+    const b = bars[j];
+    if(!a || !b) continue;
+
+    const distance = (j - i) * 7;
+    const moveTime = Math.max(40, Math.min(120, getDelay() * 0.25));
+
+    a.classList.add("bar-timereverse");
+    b.classList.add("bar-timereverse");
+
+    a.style.transition = `transform ${moveTime}ms cubic-bezier(.22,.75,.25,1)`;
+    b.style.transition = `transform ${moveTime}ms cubic-bezier(.22,.75,.25,1)`;
+    a.style.transform = `translateX(${distance}px)`;
+    b.style.transform = `translateX(${-distance}px)`;
+    a.style.zIndex = "60";
+    b.style.zIndex = "60";
+
+    descEl.textContent = `时间倒流排序：正向排序中…… (${s+1} / ${steps.length})`;
+    if(!(await wait(moveTime, token))) return;
+
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+    tryCnt++;
+    cntEl.textContent = tryCnt;
+
+    for(const bar of viewEl.children){
+      bar.style.transition = "";
+      bar.style.transform = "";
+      bar.style.zIndex = "";
+    }
+
+    render();
+
+    if(!(await wait(Math.max(60, getDelay() * 0.2), token))) return;
+  }
+
+  descEl.textContent="时间倒流排序：正向排序完成！现在时间开始倒流……";
+  if(!(await wait(Math.max(500, getDelay()), token))) return;
+
+  for(let s=steps.length-1;s>=0;s--){
+    if(!running || token!==runToken) return;
+
+    const [i,j] = steps[s];
+    const bars = Array.from(viewEl.children);
+    const a = bars[i];
+    const b = bars[j];
+    if(!a || !b) continue;
+
+    const distance = (j - i) * 7;
+    const moveTime = Math.max(250, Math.min(600, getDelay()));
+
+    a.classList.add("bar-timereverse");
+    b.classList.add("bar-timereverse");
+
+    a.style.transition = `transform ${moveTime}ms cubic-bezier(.22,.75,.25,1)`;
+    b.style.transition = `transform ${moveTime}ms cubic-bezier(.22,.75,.25,1)`;
+    a.style.transform = `translateX(${distance}px)`;
+    b.style.transform = `translateX(${-distance}px)`;
+    a.style.zIndex = "60";
+    b.style.zIndex = "60";
+
+    descEl.textContent = `时间倒流排序：时间倒流中…… (${steps.length - s} / ${steps.length})`;
+    if(!(await wait(moveTime, token))) return;
+
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+    tryCnt++;
+    cntEl.textContent = tryCnt;
+
+    for(const bar of viewEl.children){
+      bar.style.transition = "";
+      bar.style.transform = "";
+      bar.style.zIndex = "";
+    }
+
+    render();
+
+    if(!(await wait(Math.max(60, getDelay() * 0.2), token))) return;
+  }
+
+  isWin=true;
+  render();
+  descEl.textContent="时间倒流排序：时间回到最初……虽然乱序，但已经看透了结局！⏳";
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   离心排序
+===================================================== */
+
+async function centrifugeRun(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  tryCnt=0;
+  cntEl.textContent=tryCnt;
+  isWin=false;
+  render();
+
+  descEl.textContent="离心排序：启动洗衣机，缩放到 15% 并顺时针高速旋转……";
+  if(!(await wait(Math.max(400,getDelay()),token))) return;
+
+  viewInner.style.transition = "transform 600ms ease";
+  viewInner.style.transformOrigin = "center center";
+  viewInner.style.transform = "scale(0.15)";
+  viewEl.classList.add("centrifuge-shake");
+
+  if(!(await wait(650, token))){
+    viewInner.style.transition="";
+    viewInner.style.transform="";
+    viewEl.classList.remove("centrifuge-shake");
+    return;
+  }
+
+  viewInner.style.transition = "";
+  viewInner.style.setProperty("--spin-scale", "0.15");
+  viewInner.classList.add("centrifuge-spin");
+
+  if(!(await wait(100,token))) return;
+
+  const n=arr.length;
+  let hi=n-1;
+
+  function findMax(h){
+    let maxIdx=0;
+    for(let i=1;i<=h;i++){
+      if(arr[i]>arr[maxIdx]) maxIdx=i;
+    }
+    return maxIdx;
+  }
+
+  function cleanup(){
+    viewInner.classList.remove("centrifuge-spin");
+    viewEl.classList.remove("centrifuge-shake");
+    viewInner.style.transition="";
+    viewInner.style.transform="";
+    viewInner.style.removeProperty("--spin-scale");
+  }
+
+  while(hi>0){
+    if(!running || token!==runToken){ cleanup(); return; }
+
+    const maxIdx=findMax(hi);
+
+    const extra1={};
+    extra1[maxIdx]="bar-centrifuge-heavy";
+    render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,extra1);
+    descEl.textContent=`离心排序：检测到重元素 ${arr[maxIdx].toFixed(1)}（第 ${maxIdx+1} 位），即将甩向右端……`;
+    if(!(await wait(Math.max(0, getDelay()*0.3),token))){ cleanup(); return; }
+
+    if(maxIdx!==hi){
+      const flyTime=Math.max(500,Math.min(900,getDelay()*1.2));
+      descEl.textContent=`离心排序：重元素 ${arr[maxIdx].toFixed(1)} 被甩向右端……`;
+
+      const bars=Array.from(viewEl.children);
+      const fromBar=bars[maxIdx];
+      const toBar=bars[hi];
+      if(!fromBar||!toBar){ cleanup(); return; }
+
+      const slot=7;
+      const distance=(hi-maxIdx)*slot;
+
+      fromBar.style.zIndex="90";
+      fromBar.classList.add("bar-centrifuge-fly");
+      fromBar.style.transition=`transform ${flyTime}ms cubic-bezier(.16,.9,.3,1)`;
+      fromBar.style.transform=`translateX(${distance}px) translateY(-8px) scaleY(1.4)`;
+
+      toBar.style.zIndex="80";
+      toBar.style.transition=`transform ${flyTime}ms cubic-bezier(.16,.9,.3,1)`;
+      toBar.style.transform=`translateX(${-distance}px) translateY(4px) scaleY(0.85)`;
+
+      if(!(await wait(flyTime,token))){ cleanup(); return; }
+
+      [arr[maxIdx],arr[hi]]=[arr[hi],arr[maxIdx]];
+      tryCnt++;
+      cntEl.textContent=tryCnt;
+
+      for(const bar of viewEl.children){
+        bar.style.transition="";
+        bar.style.transform="";
+        bar.style.zIndex="";
+        bar.classList.remove("bar-centrifuge-fly");
+      }
+
+      render();
+
+      const extra2={};
+      extra2[hi]="bar-centrifuge-out";
+      render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,extra2);
+      descEl.textContent=`离心排序：重元素已贴到右端（第 ${hi+1} 位）固定`;
+      if(!(await wait(Math.max(0, getDelay()*0.2),token))){ cleanup(); return; }
+    }else{
+      const extra2={};
+      extra2[hi]="bar-centrifuge-out";
+      render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,extra2);
+      tryCnt++;
+      cntEl.textContent=tryCnt;
+      descEl.textContent=`离心排序：最大值本来就在右端（第 ${hi+1} 位），直接固定`;
+      if(!(await wait(Math.max(0, getDelay()*0.2),token))){ cleanup(); return; }
+    }
+
+    hi--;
+
+    const extra5={};
+    for(let k=hi+1;k<n;k++) extra5[k]="bar-centrifuge-out";
+    render(-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,null,extra5);
+    descEl.textContent=`离心排序：已完成第 ${n-1-hi} / ${n-1} 轮离心，剩余区间 [1, ${hi+1}]`;
+    if(!(await wait(Math.max(0, getDelay()*0.2),token))){ cleanup(); return; }
+  }
+
+  cleanup();
+
+  if(!isSorted()) arr.sort((a,b)=>a-b);
+
+  isWin=true;
+  render();
+  descEl.textContent=`离心排序：洗“柱”完成！所有元素都归位了！🌀`;
+  running=false;
+  runBtn.disabled=false;
+}
+
+/* =====================================================
+   猴子排序
+===================================================== */
+
+async function monkeyOriginalLoop(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+  while(running && token===runToken){
+    arr=shuffle(arr);
+    tryCnt++;
+    cntEl.textContent=tryCnt;
+    render();
+    if(isSorted()){
+      isWin=true;
+      render();
+      descEl.textContent="猴子排序：奇迹发生了！";
+      running=false;
+      runBtn.disabled=false;
+      return;
+    }
+    if(!(await wait(getDelay(),token))) return;
+  }
+}
+
+async function monkeyOptLoop(){
+  const token=++runToken;
+  running=true;
+  runBtn.disabled=true;
+
+  lockPos=-1;
+  tryCnt=0;
+  cntEl.textContent=tryCnt;
+  isWin=false;
+  render();
+  descEl.textContent="猴子排序优化版：从左到右逐个锁定正确位置……";
+
+  const n=arr.length;
+
+  for(let pos=0;pos<n-1;pos++){
+
+    if(!running || token!==runToken) return;
+
+    let locked=false;
+
+    while(running && token===runToken && !locked){
+
+      let isMin=true;
+      for(let k=pos+1;k<n;k++){
+        if(arr[k]<arr[pos]){ isMin=false; break; }
+      }
+
+      if(isMin){
+        locked=true;
+        lockPos=pos;
+        render();
+        descEl.textContent=`猴子优化版：第 ${pos+1} 个位置已锁定 (值 ${arr[pos].toFixed(1)})`;
+        if(!(await wait(Math.max(0, getDelay()*0.5),token))) return;
+        break;
+      }
+
+      const suffix=arr.slice(pos);
+      const shuffledSuffix=shuffle(suffix);
+      for(let k=0;k<shuffledSuffix.length;k++){
+        arr[pos+k]=shuffledSuffix[k];
+      }
+
+      tryCnt++;
+      cntEl.textContent=tryCnt;
+      render();
+      descEl.textContent=`猴子优化版：正在尝试锁定第 ${pos+1} 个位置…… (已尝试 ${tryCnt} 次)`;
+
+      if(!(await wait(getDelay(),token))) return;
+    }
+
+    if(!running || token!==runToken) return;
+  }
+
+  if(running && token===runToken){
+    if(!isSorted()) arr.sort((a,b)=>a-b);
+    isWin=true;
+    lockPos=-1;
+    render();
+    descEl.textContent="猴子排序优化版：所有位置锁定完成！排序成功！";
+    running=false;
+    runBtn.disabled=false;
+  }
+}
+
+/* =====================================================
+   开始按钮
+===================================================== */
+
+runBtn.onclick=async function(){
+  if(running) return;
+
+  switch(typeSel.value){
+    case"monkeyOriginal": await monkeyOriginalLoop(); break;
+    case"monkeyOpt": await monkeyOptLoop(); break;
+    case"stalin": await stalinRun(); break;
+    case"brezhnev": await brezhnevRun(); break;
+    case"miracle": await miracleRun(); break;
+    case"trump": await trumpRun(); break;
+    case"gorbachev": await gorbachevRun(); break;
+    case"polpot": await polpotRun(); break;
+    case"taiping": await taipingRun(); break;
+    case"sleep": await sleepRun(); break;
+    case"quick": await quickRun(); break;
+    case"dualPivot": await dualPivotRun(); break;
+    case"gnome": await gnomeRun(); break;
+    case"patience": await patienceRun(); break;
+    case"thanos": await thanosRun(); break;
+    case"pizza": await pizzaRun(); break;
+    case"slow": await slowRun(); break;
+    case"bubble": await bubbleRun(); break;
+    case"selection": await selectionRun(); break;
+    case"msdRadix": await msdRadixRun(); break;
+    case"cppSort": await cppSortRun(); break;
+    case"cppStableSort": await cppStableSortRun(); break;
+    case"bitonic": await bitonicRun(); break;
+    case"insertion": await insertionRun(); break;
+    case"tim": await timRun(); break;
+    case"bead": await beadRun(); break;
+    case"hourglass": await hourglassRun(); break;
+    case"bucket": await bucketRun(); break;
+    case"manual": break;
+    case"kill": break;
+    case"emptyCity": await emptyCityRun(); break;
+    case"cocktail": await cocktailRun(); break;
+    case"shell": await shellRun(); break;
+    case"heap": await heapRun(); break;
+    case"counting": await countingRun(); break;
+    case"radix": await radixRun(); break;
+    case"pancake": await pancakeRun(); break;
+    case"randomQuick": await randomQuickRun(); break;
+    case"intro": await introRun(); break;
+    case"pigeonhole": await pigeonholeRun(); break;
+    case"alien": await alienRun(); break;
+    case"centrifuge": await centrifugeRun(); break;
+    case"gpt": await gptRun(); break;
+    case"schrodinger": await schrodingerRun(); break;
+    case"timereverse": await timereverseRun(); break;
+  }
+};
+
+killUndoBtn.onclick = function(){
+  if(killHistory.length === 0) return;
+  if(isWin) return;
+
+  const last = killHistory.pop();
+  const idx = Math.min(last.index, arr.length);
+  arr.splice(idx, 0, last.value);
+  tryCnt++;
+  cntEl.textContent = tryCnt;
+
+  // 先渲染回来
+  render();
+
+  // 给刚复活的那根柱子加绿闪
+  const bars = Array.from(viewEl.children);
+  const newBar = bars[idx];
+  if(newBar){
+    newBar.classList.add("bar-kill-revive");
+
+    // 400ms 后移除绿闪，变回普通蓝色
+    setTimeout(function(){
+      newBar.classList.remove("bar-kill-revive");
+    }, 400);
+  }
+
+  descEl.textContent = "杀戮排序：已复活上一根柱子";
+};
+
+killBtn.onclick = function(){
+  killModeOn = !killModeOn;
+  killBtn.textContent = "杀戮模式：" + (killModeOn ? "开" : "关");
+  killBtn.style.background = killModeOn ? "#cc3333" : "#2574e8";
+};
+
+genBtn.onclick=genArray;
+stopBtn.onclick=stopAll;
+
+document.getElementById("grainCountLabel").style.display =
+  typeSel.value==="hourglass" ? "inline-flex" : "none";
+killBtn.style.display =
+  typeSel.value==="kill" ? "inline-block" : "none";
+killUndoBtn.style.display =
+  typeSel.value==="kill" ? "inline-block" : "none";
+
+genArray();
+
+</script>
+
+</body>
+</html>
